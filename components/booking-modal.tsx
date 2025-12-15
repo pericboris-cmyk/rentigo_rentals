@@ -446,15 +446,9 @@ export default function BookingModal({
         break
       }
       case 2: {
-        // Car selection - no additional validation needed
         break
       }
       case 3: {
-        // Extras selection - no additional validation needed
-        break
-      }
-      case 4: {
-        // Validate main driver
         const driver1 = driverData.driver1
 
         const firstNameError = validateName(driver1.firstName, "Vorname")
@@ -499,8 +493,7 @@ export default function BookingModal({
         }
         break
       }
-      case 5: {
-        // Validate contact information
+      case 4: {
         const firstNameError = validateName(formData.firstName, "Vorname")
         if (firstNameError) errors.push(firstNameError)
 
@@ -537,12 +530,12 @@ export default function BookingModal({
     }
 
     setValidationErrors([])
-    setStep((prev) => Math.min(prev + 1, 5))
+    setStep((prev) => Math.min(prev + 1, 4)) // Max step is now 4
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!canProceed() || step !== 5) return
+    if (!canProceed() || step !== 4) return
 
     if (!validateCurrentStep()) {
       return
