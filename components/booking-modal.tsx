@@ -957,72 +957,6 @@ export default function BookingModal({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <div className="space-y-2 sm:space-y-3">
-                    <Label htmlFor="returnDate" className="flex items-center gap-2 font-medium text-sm sm:text-base">
-                      <CalendarIcon className="w-4 h-4 text-primary" />
-                      Rückgabedatum
-                    </Label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full h-11 px-4 bg-transparent text-left font-normal",
-                            !formData.returnDate && "text-muted-foreground",
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.returnDate ? (
-                            format(new Date(formData.returnDate + "T12:00:00"), "PPP", { locale: de })
-                          ) : (
-                            <span>Datum wählen</span>
-                          )}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
-                        <Calendar
-                          mode="single"
-                          selected={formData.returnDate ? new Date(formData.returnDate + "T12:00:00") : undefined}
-                          onSelect={(date) => {
-                            if (date) {
-                              setFormData((prev) => ({
-                                ...prev,
-                                returnDate: formatDateForDB(date),
-                              }))
-                            }
-                          }}
-                          initialFocus
-                          locale={de}
-                          fromDate={getEarliestPickupDate()}
-                          disabled={isDateDisabledForBooking}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-                  <div className="space-y-2 sm:space-y-3">
-                    <Label htmlFor="returnTime" className="flex items-center gap-2 font-medium text-sm sm:text-base">
-                      <Clock className="w-4 h-4 text-primary" />
-                      Rückgabezeit
-                    </Label>
-                    <Select
-                      value={formData.returnTime}
-                      onValueChange={(value) => setFormData((prev) => ({ ...prev, returnTime: value }))}
-                    >
-                      <SelectTrigger className="h-11 px-4 bg-transparent">
-                        <SelectValue placeholder="Zeit wählen" />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-[200px]">
-                        {generateTimeOptions().map((time) => (
-                          <SelectItem key={time} value={time}>
-                            {time}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6">
                   <div className="space-y-2 sm:space-y-3">
                     <Label htmlFor="pickupAddress" className="flex items-center gap-2 font-medium text-sm sm:text-base">
@@ -1510,12 +1444,14 @@ export default function BookingModal({
                           </>
                         )}
 
-                        <div className="border-t-2 border-primary/30 pt-3 mt-3 flex items-center justify-between bg-primary/5 rounded-lg p-3">
-                          <span className="text-lg font-bold text-foreground flex items-center gap-2">
-                            <DollarSign size={20} className="text-primary" />
-                            Gesamtpreis
-                          </span>
-                          <span className="text-2xl font-bold text-primary">CHF {total.toFixed(2)}</span>
+                        <div className="border-t-2 border-primary/30 pt-3 mt-3 bg-primary/5 rounded-lg p-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <span className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+                              <DollarSign size={20} className="text-primary flex-shrink-0" />
+                              Gesamtpreis
+                            </span>
+                            <span className="text-2xl font-bold text-primary">CHF {total.toFixed(2)}</span>
+                          </div>
                         </div>
                       </div>
                     </div>

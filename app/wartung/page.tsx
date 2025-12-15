@@ -3,11 +3,10 @@
 import { Construction, Clock, Mail, Phone, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
 
 export default function MaintenancePage() {
-  const router = useRouter()
   const [isChecking, setIsChecking] = useState(false)
+  const [checkCount, setCheckCount] = useState(0)
 
   useEffect(() => {
     const checkMaintenanceStatus = async () => {
@@ -15,6 +14,8 @@ export default function MaintenancePage() {
 
       setIsChecking(true)
       try {
+        console.log("[v0] Fetching maintenance mode status")
+
         const response = await fetch("/api/admin/maintenance", {
           method: "GET",
           headers: {
@@ -25,6 +26,12 @@ export default function MaintenancePage() {
 
         if (!response.ok) {
           console.error("[v0] Maintenance API returned status:", response.status)
+
+          // If rate limited, increase the check interval
+          if (response.status === 429) {
+            console.log("[v0] Rate limited, will retry later")
+          }
+
           setIsChecking(false)
           return
         }
@@ -32,7 +39,8 @@ export default function MaintenancePage() {
         // Check if response is actually JSON
         const contentType = response.headers.get("content-type")
         if (!contentType || !contentType.includes("application/json")) {
-          console.error("[v0] Non-JSON response received (possibly rate limited)")
+          const textResponse = await response.text()
+          console.error("[v0] Non-JSON response received:", textResponse.substring(0, 100))
           setIsChecking(false)
           return
         }
@@ -41,19 +49,25 @@ export default function MaintenancePage() {
 
         if (data.maintenanceMode === false) {
           window.location.href = "/"
+        } else {
+          setCheckCount((prev) => prev + 1)
         }
       } catch (error) {
-        console.error("[v0] Error checking maintenance status:", error)
+        console.error("[v0] Error fetching maintenance mode:", error)
       } finally {
         setIsChecking(false)
       }
     }
 
-    checkMaintenanceStatus()
+    // Initial check after 1 second
+    const initialTimeout = setTimeout(checkMaintenanceStatus, 1000)
 
-    const interval = setInterval(checkMaintenanceStatus, 30000)
+    const interval = setInterval(checkMaintenanceStatus, 60000)
 
-    return () => clearInterval(interval)
+    return () => {
+      clearTimeout(initialTimeout)
+      clearInterval(interval)
+    }
   }, [isChecking])
 
   return (

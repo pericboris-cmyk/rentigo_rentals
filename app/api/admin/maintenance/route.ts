@@ -1,10 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase/server"
 
+const headers = {
+  "Content-Type": "application/json",
+  "Cache-Control": "no-store, no-cache, must-revalidate",
+}
+
 export async function GET(request: NextRequest) {
   try {
-    console.log("[v0] Fetching maintenance mode status")
-
     const supabase = await createServerClient()
 
     const { data, error } = await supabase
@@ -15,24 +18,21 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error("[v0] Error fetching maintenance mode:", error)
-      // Return false on error to allow access
-      return NextResponse.json({ maintenanceMode: false }, { status: 200 })
+      return NextResponse.json({ maintenanceMode: false }, { status: 200, headers })
     }
 
     const isMaintenanceMode = data?.value === "true"
-    console.log("[v0] Maintenance mode status:", isMaintenanceMode)
 
-    return NextResponse.json({ maintenanceMode: isMaintenanceMode })
+    return NextResponse.json({ maintenanceMode: isMaintenanceMode }, { headers })
   } catch (error: any) {
     console.error("[v0] Error in maintenance GET:", error)
-    return NextResponse.json({ maintenanceMode: false }, { status: 200 })
+    return NextResponse.json({ maintenanceMode: false, error: "Internal server error" }, { status: 200, headers })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const { enabled } = await request.json()
-    console.log("[v0] Setting maintenance mode to:", enabled)
 
     const supabase = await createServerClient()
 
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       console.error("[v0] Auth error:", authError)
-      return NextResponse.json({ error: "Unauthorized - Please login" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized - Please login" }, { status: 401, headers })
     }
 
     // Check if user is admin
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     if (userError || !userData || userData.role !== "admin") {
       console.error("[v0] Not admin:", userError)
-      return NextResponse.json({ error: "Forbidden - Admin only" }, { status: 403 })
+      return NextResponse.json({ error: "Forbidden - Admin only" }, { status: 403, headers })
     }
 
     // Update maintenance mode
@@ -69,13 +69,12 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
       console.error("[v0] Error updating maintenance mode:", updateError)
-      return NextResponse.json({ error: updateError.message }, { status: 500 })
+      return NextResponse.json({ error: updateError.message }, { status: 500, headers })
     }
 
-    console.log("[v0] Maintenance mode updated successfully")
-    return NextResponse.json({ success: true, maintenanceMode: enabled })
+    return NextResponse.json({ success: true, maintenanceMode: enabled }, { headers })
   } catch (error: any) {
     console.error("[v0] Error in maintenance POST:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: error.message }, { status: 500, headers })
   }
 }
