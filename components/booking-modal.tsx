@@ -19,9 +19,9 @@ import {
   Award as IdCard,
   Mountain,
   Package,
-  ChevronRight,
-  ChevronLeft,
   Clock,
+  ArrowLeft,
+  ArrowRight,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/useAuth"
@@ -37,13 +37,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 import { de } from "date-fns/locale"
 import {
-  validateBirthDate,
-  validateName,
-  validatePhoneNumber,
-  validateEmail,
-  validateLicenseIssueDate,
   validateBookingDates,
-  areDriversIdentical,
   validateLocationAddress,
   getEarliestPickupDate, // New function from updates
   getAvailableTimeSlots, // New function from updates
@@ -407,14 +401,12 @@ export default function BookingModal({
   const canProceed = (): boolean => {
     switch (step) {
       case 1:
-        return showVehicles && cars.length > 0
+        return showVehicles && !!formData.carId
       case 2:
-        return !!formData.carId
+        return true
       case 3:
         return true
       case 4:
-        return true
-      case 5:
         return (
           !!formData.firstName &&
           !!formData.lastName &&
@@ -428,95 +420,33 @@ export default function BookingModal({
   }
 
   const validateCurrentStep = (): boolean => {
-    const errors: ValidationError[] = []
+    const errors: ValidationError[] = [] // Changed type for consistency
 
     switch (step) {
-      case 1: {
-        // Validate booking dates
-        const dateError = validateBookingDates(
-          formData.pickupDate,
-          formData.pickupTime,
-          formData.returnDate,
-          formData.returnTime,
-        )
-        if (dateError) errors.push(dateError)
+      case 1:
+        if (!formData.pickupDate) errors.push({ field: "Abholdatum", message: "Abholdatum ist erforderlich" })
+        if (!formData.pickupTime) errors.push({ field: "Abholzeit", message: "Abholzeit ist erforderlich" })
+        if (!formData.returnDate) errors.push({ field: "Rückgabedatum", message: "Rückgabedatum ist erforderlich" })
+        if (!formData.returnTime) errors.push({ field: "Rückgabezeit", message: "Rückgabezeit ist erforderlich" })
+        if (!formData.pickupAddress || formData.pickupAddress.length < 5)
+          errors.push({ field: "Abholstandort", message: "Abholstandort ist erforderlich" })
+        if (!formData.dropoffAddress || formData.dropoffAddress.length < 5)
+          errors.push({ field: "Rückgabestandort", message: "Rückgabestandort ist erforderlich" })
 
-        const pickupAddressError = validateLocationAddress(formData.pickupAddress, "Abholstandort")
-        if (pickupAddressError) errors.push(pickupAddressError)
-
-        const dropoffAddressError = validateLocationAddress(formData.dropoffAddress, "Rückgabestandort")
-        if (dropoffAddressError) errors.push(dropoffAddressError)
-        break
-      }
-      case 2: {
-        // Car selection - no additional validation needed
-        break
-      }
-      case 3: {
-        // Extras selection - no additional validation needed
-        break
-      }
-      case 4: {
-        // Validate main driver
-        const driver1 = driverData.driver1
-
-        const firstNameError = validateName(driver1.firstName, "Vorname")
-        if (firstNameError) errors.push(firstNameError)
-
-        const lastNameError = validateName(driver1.lastName, "Nachname")
-        if (lastNameError) errors.push(lastNameError)
-
-        const birthDateError = validateBirthDate(driver1.birthDate, "Geburtsdatum")
-        if (birthDateError) errors.push(birthDateError)
-
-        const licenseIssueError = validateLicenseIssueDate(driver1.licenseIssueDate, driver1.birthDate)
-        if (licenseIssueError) errors.push(licenseIssueError)
-
-        // Validate additional driver if selected
-        if (selectedExtras.includes("additional_driver")) {
-          const driver2 = driverData.driver2
-
-          const d2FirstNameError = validateName(driver2.firstName, "Zusatzfahrer Vorname")
-          if (d2FirstNameError) errors.push(d2FirstNameError)
-
-          const d2LastNameError = validateName(driver2.lastName, "Zusatzfahrer Nachname")
-          if (d2LastNameError) errors.push(d2LastNameError)
-
-          const d2BirthDateError = validateBirthDate(driver2.birthDate, "Zusatzfahrer Geburtsdatum")
-          if (d2BirthDateError) errors.push(d2BirthDateError)
-
-          const d2LicenseIssueError = validateLicenseIssueDate(
-            driver2.licenseIssueDate,
-            driver2.birthDate,
-            "Zusatzfahrer Führerschein-Ausstellungsdatum",
-          )
-          if (d2LicenseIssueError) errors.push(d2LicenseIssueError)
-
-          // Check if drivers are identical
-          if (areDriversIdentical(driver1, driver2)) {
-            errors.push({
-              field: "Zusatzfahrer",
-              message: "Hauptfahrer und Zusatzfahrer dürfen nicht identisch sein",
-            })
-          }
+        if (showVehicles && !formData.carId) {
+          errors.push({ field: "Fahrzeug", message: "Bitte wählen Sie ein Fahrzeug" })
         }
         break
-      }
-      case 5: {
-        // Validate contact information
-        const firstNameError = validateName(formData.firstName, "Vorname")
-        if (firstNameError) errors.push(firstNameError)
-
-        const lastNameError = validateName(formData.lastName, "Nachname")
-        if (lastNameError) errors.push(lastNameError)
-
-        const emailError = validateEmail(formData.email)
-        if (emailError) errors.push(emailError)
-
-        const phoneError = validatePhoneNumber(formData.phone)
-        if (phoneError) errors.push(phoneError)
+      case 2:
         break
-      }
+      case 3:
+        break
+      case 4:
+        if (!formData.firstName) errors.push({ field: "Vorname", message: "Vorname ist erforderlich" })
+        if (!formData.lastName) errors.push({ field: "Nachname", message: "Nachname ist erforderlich" })
+        if (!formData.email) errors.push({ field: "E-Mail", message: "E-Mail ist erforderlich" })
+        if (!formData.phone) errors.push({ field: "Telefon", message: "Telefon ist erforderlich" })
+        break
     }
 
     setValidationErrors(errors)
@@ -733,14 +663,14 @@ export default function BookingModal({
 
   // Unified handler for proceeding to the next step
   const handleNextStep = () => {
-    if (!canProceed() || step === 5) return
+    if (!canProceed() || step === 4) return
 
     if (!validateCurrentStep()) {
       return
     }
 
     setValidationErrors([])
-    setStep((prev) => Math.min(prev + 1, 5))
+    setStep((prev) => Math.min(prev + 1, 4))
   }
 
   // Unified handler for going back
@@ -759,6 +689,13 @@ export default function BookingModal({
   // Renamed function for clarity
   const canProceedToNextStep = () => canProceed()
 
+  // Renamed submit button handler
+  const handleBooking = () => {
+    if (!canProceedToNextStep() || step !== 4) return
+    if (!validateCurrentStep()) return
+    handleSubmit(new Event("submit") as React.FormEvent) // Simulate form submission
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[90vw] md:max-w-[1100px] lg:max-w-[1200px] max-h-[90vh] sm:max-h-[85vh] p-4 sm:p-6 md:p-10 rounded-xl sm:rounded-2xl overflow-auto">
@@ -770,11 +707,10 @@ export default function BookingModal({
             {/* Mobile: Icon-only indicators */}
             <div className="flex md:hidden items-center justify-center gap-2">
               {[
-                { number: 1, label: "Zeitraum" },
-                { number: 2, label: "Fahrzeug" },
-                { number: 3, label: "Extras" },
-                { number: 4, label: "Fahrerdaten" },
-                { number: 5, label: "Bestätigen" },
+                { number: 1, label: "Zeitraum & Fahrzeug" },
+                { number: 2, label: "Extras" },
+                { number: 3, label: "Fahrerdaten" },
+                { number: 4, label: "Bestätigen" },
               ].map((stepInfo, index) => (
                 <React.Fragment key={stepInfo.number}>
                   <div
@@ -788,7 +724,7 @@ export default function BookingModal({
                   >
                     {step > stepInfo.number ? <Check className="w-4 h-4" /> : stepInfo.number}
                   </div>
-                  {index < 4 && <div className="w-4 sm:w-6 h-0.5 bg-muted" />}
+                  {index < 3 && <div className="w-4 sm:w-6 h-0.5 bg-muted" />}
                 </React.Fragment>
               ))}
             </div>
@@ -796,11 +732,10 @@ export default function BookingModal({
             {/* Desktop: Full indicators with labels */}
             <div className="hidden md:flex items-center justify-center gap-4">
               {[
-                { number: 1, label: "Zeitraum" },
-                { number: 2, label: "Fahrzeug" },
-                { number: 3, label: "Extras" },
-                { number: 4, label: "Fahrerdaten" },
-                { number: 5, label: "Bestätigen" },
+                { number: 1, label: "Zeitraum & Fahrzeug" },
+                { number: 2, label: "Extras" },
+                { number: 3, label: "Fahrerdaten" },
+                { number: 4, label: "Bestätigen" },
               ].map((stepInfo, index) => (
                 <React.Fragment key={stepInfo.number}>
                   <div className="flex flex-col items-center gap-1">
@@ -823,7 +758,7 @@ export default function BookingModal({
                       {stepInfo.label}
                     </span>
                   </div>
-                  {index < 4 && <div className="w-12 h-0.5 bg-muted" />}
+                  {index < 3 && <div className="w-12 h-0.5 bg-muted" />}
                 </React.Fragment>
               ))}
             </div>
@@ -831,25 +766,24 @@ export default function BookingModal({
             {/* Mobile: Current step label below */}
             <div className="flex md:hidden justify-center mt-3">
               <span className="text-sm font-medium text-foreground">
-                {step === 1 && "Zeitraum wählen"}
-                {step === 2 && "Fahrzeug wählen"}
-                {step === 3 && "Extras wählen"}
-                {step === 4 && "Fahrerdaten eingeben"}
-                {step === 5 && "Buchung bestätigen"}
+                {step === 1 && "Zeitraum & Fahrzeug wählen"}
+                {step === 2 && "Extras wählen"}
+                {step === 3 && "Fahrerdaten eingeben"}
+                {step === 4 && "Buchung bestätigen"}
               </span>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 px-1">
-            {/* Step 1: Datum */}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6">
+            {/* Step 1: Zeitraum & Fahrzeug */}
             {step === 1 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 text-foreground">
-                    Wann möchten Sie das Fahrzeug mieten?
+                    Wählen Sie Ihren Zeitraum
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Wählen Sie Abhol- und Rückgabedatum mit Uhrzeit
+                    Geben Sie Ihre Abhol- und Rückgabeinformationen ein
                   </p>
                 </div>
 
@@ -1006,84 +940,62 @@ export default function BookingModal({
                     "Verfügbare Fahrzeuge anzeigen"
                   )}
                 </Button>
-              </div>
-            )}
 
-            {/* Step 2: Fahrzeuge */}
-            {step === 2 && showVehicles && (
-              <div className="space-y-4 sm:space-y-6">
-                <div>
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 text-foreground">
-                    Wählen Sie Ihr Fahrzeug
-                  </h2>
-                  <p className="text-sm sm:text-base text-muted-foreground">
-                    {availableCars.length} verfügbare {availableCars.length === 1 ? "Fahrzeug" : "Fahrzeuge"}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  {cars.length === 0 && !loadingCars ? (
-                    <div className="col-span-full py-8 text-center text-muted-foreground">
-                      Keine Fahrzeuge für den ausgewählten Zeitraum verfügbar.
+                {showVehicles && cars.length > 0 && (
+                  <div className="space-y-4 border-t pt-4 sm:pt-6 mt-4 sm:mt-6">
+                    <div>
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2 text-foreground">
+                        Verfügbare Fahrzeuge
+                      </h3>
+                      <p className="text-sm sm:text-base text-muted-foreground">
+                        {cars.length} verfügbare{cars.length === 1 ? "s Fahrzeug" : " Fahrzeuge"} für Ihren Zeitraum
+                      </p>
                     </div>
-                  ) : (
-                    cars.map((car) => {
-                      const isSelected = formData.carId === car.id
-                      return (
-                        <div
-                          key={car.id}
-                          onClick={() => setFormData((prev) => ({ ...prev, carId: car.id }))}
-                          className={`border rounded-lg p-3 cursor-pointer transition-all ${
-                            isSelected
-                              ? "border-primary bg-primary/5 shadow-sm"
-                              : "border-border hover:border-primary/50"
-                          }`}
-                        >
-                          <div className="flex gap-3">
-                            {car.image_url && (
-                              <img
-                                src={car.image_url || "/placeholder.svg"}
-                                alt={`${car.name} ${car.year}`}
-                                className="w-28 h-20 object-cover rounded"
-                              />
-                            )}
-                            <div className="flex-1">
-                              <div className="flex items-start justify-between gap-2">
-                                <div>
-                                  <h4 className="font-semibold text-foreground">
-                                    {car.name} {car.year}
-                                  </h4>
-                                  <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                                    <span className="flex items-center gap-1">
-                                      <Users size={12} /> {car.seats}
-                                    </span>
-                                    <span>{car.transmission}</span>
-                                    <span>{car.fuel_type}</span>
-                                  </div>
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-lg font-bold text-primary">CHF {car.price_per_day}</div>
-                                  <div className="text-[11px] text-muted-foreground">pro Tag</div>
-                                </div>
-                              </div>
-                              {isSelected && (
-                                <div className="mt-1 flex items-center gap-1 text-primary text-xs">
-                                  <Check size={14} />
-                                  <span className="font-medium">Ausgewählt</span>
-                                </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                      {cars.map((car) => {
+                        const isSelected = formData.carId === car.id
+                        return (
+                          <div
+                            key={car.id}
+                            onClick={() => setFormData((prev) => ({ ...prev, carId: car.id }))}
+                            className={`border rounded-lg p-3 cursor-pointer transition-all ${
+                              isSelected
+                                ? "border-primary bg-primary/5 shadow-sm"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                          >
+                            <div className="flex gap-3">
+                              {car.image_url && (
+                                <img
+                                  src={car.image_url || "/placeholder.svg"}
+                                  alt={`${car.name} ${car.year}`}
+                                  className="w-28 h-20 object-cover rounded"
+                                />
                               )}
+                              <div className="flex-1">
+                                <h4 className="font-semibold text-sm">{car.name}</h4>
+                                <p className="text-xs text-muted-foreground">{car.year}</p>
+                                <p className="text-sm font-bold text-primary mt-1">CHF {car.price_per_day}/Tag</p>
+                              </div>
                             </div>
+                            {isSelected && (
+                              <div className="mt-2 flex items-center gap-1 text-xs text-primary font-medium">
+                                <Check className="w-4 h-4" />
+                                Ausgewählt
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      )
-                    })
-                  )}
-                </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Step 3: Extras */}
-            {step === 3 && (
+            {/* Step 2: Extras (previously step 3) */}
+            {step === 2 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 text-foreground">
@@ -1174,8 +1086,8 @@ export default function BookingModal({
               </div>
             )}
 
-            {/* Step 4: Fahrerdaten */}
-            {step === 4 && (
+            {/* Step 3: Fahrerdaten (previously step 4) */}
+            {step === 3 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 text-foreground">
@@ -1329,8 +1241,8 @@ export default function BookingModal({
               </div>
             )}
 
-            {/* Step 5: Bestätigen */}
-            {step === 5 && (
+            {/* Step 4: Zusammenfassung (previously step 5) */}
+            {step === 4 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 text-foreground">
@@ -1475,41 +1387,45 @@ export default function BookingModal({
             )}
           </div>
 
-          <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
-            {step > 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handlePreviousStep}
-                className="flex-1 h-10 sm:h-11 text-sm sm:text-base bg-transparent"
-              >
-                <ChevronLeft className="mr-1 h-4 w-4" />
-                Zurück
-              </Button>
-            )}
-            {step < 5 ? (
+          <div className="border-t bg-background px-4 sm:px-6 md:px-8 py-3 sm:py-4 flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePreviousStep}
+              disabled={isSubmitting}
+              className="w-full sm:w-auto order-2 sm:order-1 bg-transparent"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Zurück
+            </Button>
+
+            {step < 4 ? (
               <Button
                 type="button"
                 onClick={handleNextStep}
-                disabled={!canProceedToNextStep()}
-                className="flex-1 h-10 sm:h-11 text-sm sm:text-base font-semibold"
+                disabled={!canProceedToNextStep() || isSubmitting}
+                className="w-full sm:w-auto order-1 sm:order-2"
               >
                 Weiter
-                <ChevronRight className="ml-1 h-4 w-4" />
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
               <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 h-10 sm:h-11 text-sm sm:text-base font-semibold"
+                type="button"
+                onClick={handleBooking}
+                disabled={!canProceedToNextStep() || isSubmitting}
+                className="w-full sm:w-auto order-1 sm:order-2"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Wird gebucht...
                   </>
                 ) : (
-                  "Jetzt buchen"
+                  <>
+                    Jetzt buchen
+                    <Check className="w-4 h-4 ml-2" />
+                  </>
                 )}
               </Button>
             )}
