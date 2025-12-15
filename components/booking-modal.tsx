@@ -22,6 +22,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Clock,
+  X,
 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/hooks/useAuth"
@@ -183,6 +184,8 @@ export default function BookingModal({
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
   const [bookingComplete, setBookingComplete] = useState(false)
   const [bookingId, setBookingId] = useState("")
+
+  const totalSteps = 4
 
   useEffect(() => {
     if (isOpen && !user) {
@@ -407,14 +410,12 @@ export default function BookingModal({
   const canProceed = (): boolean => {
     switch (step) {
       case 1:
-        return showVehicles && cars.length > 0
+        return showVehicles && cars.length > 0 && !!formData.carId
       case 2:
-        return !!formData.carId
+        return true
       case 3:
         return true
       case 4:
-        return true
-      case 5:
         return (
           !!formData.firstName &&
           !!formData.lastName &&
@@ -449,14 +450,10 @@ export default function BookingModal({
         break
       }
       case 2: {
-        // Car selection - no additional validation needed
-        break
-      }
-      case 3: {
         // Extras selection - no additional validation needed
         break
       }
-      case 4: {
+      case 3: {
         // Validate main driver
         const driver1 = driverData.driver1
 
@@ -473,7 +470,8 @@ export default function BookingModal({
         if (licenseIssueError) errors.push(licenseIssueError)
 
         // Validate additional driver if selected
-        if (selectedExtras.includes("additional_driver")) {
+        if (selectedExtras.includes("1")) {
+          // Using ID '1' for additional driver
           const driver2 = driverData.driver2
 
           const d2FirstNameError = validateName(driver2.firstName, "Zusatzfahrer Vorname")
@@ -502,7 +500,7 @@ export default function BookingModal({
         }
         break
       }
-      case 5: {
+      case 4: {
         // Validate contact information
         const firstNameError = validateName(formData.firstName, "Vorname")
         if (firstNameError) errors.push(firstNameError)
@@ -532,20 +530,46 @@ export default function BookingModal({
   }
 
   const handleNext = () => {
-    if (!canProceed()) return
-
-    // Validate current step before proceeding
     if (!validateCurrentStep()) {
+      toast.error("Bitte überprüfen Sie Ihre Eingaben.")
       return
     }
 
-    setValidationErrors([])
-    setStep((prev) => Math.min(prev + 1, 5))
+    if (step === 1) {
+      if (!formData.carId) {
+        toast.error("Bitte wählen Sie ein Fahrzeug aus.")
+        return
+      }
+    }
+
+    // The following validation logic seems redundant with validateCurrentStep() and the canProceed() check in the main handleSubmit.
+    // Keeping it commented out for now, but it might need review if there are specific edge cases.
+    /*
+    if (step === 2) {
+      if (!formData.firstName || !formData.lastName || !formData.email || !formData.phone) {
+        toast.error("Bitte füllen Sie alle Kontaktdaten aus.")
+        return
+      }
+    }
+
+    if (step === 3) {
+      if (!formData.birthDate || !formData.licenseIssueDate) {
+        toast.error("Bitte füllen Sie alle Fahrerdaten aus.")
+        return
+      }
+    }
+    */
+
+    setStep((prev) => Math.min(prev + 1, totalSteps))
+  }
+
+  const handlePrevious = () => {
+    setStep((prev) => Math.max(prev - 1, 1))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!canProceed() || step !== 5) return
+    if (!canProceed() || step !== 4) return
 
     if (!validateCurrentStep()) {
       return
@@ -566,7 +590,8 @@ export default function BookingModal({
         }),
         drivers: {
           mainDriver: driverData.driver1,
-          ...(selectedExtras.includes("additional_driver") && {
+          ...(selectedExtras.includes("1") && {
+            // Using ID '1' for additional driver
             additionalDriver: driverData.driver2,
           }),
         },
@@ -726,6 +751,7 @@ export default function BookingModal({
   const handleLoadVehicles = () => {
     if (!isStep1Valid) {
       validateCurrentStep() // Trigger validation to show errors
+      toast.error("Bitte füllen Sie alle Pflichtfelder aus und wählen Sie gültige Daten.")
       return
     }
     fetchAvailableCars()
@@ -733,14 +759,41 @@ export default function BookingModal({
 
   // Unified handler for proceeding to the next step
   const handleNextStep = () => {
-    if (!canProceed() || step === 5) return
-
     if (!validateCurrentStep()) {
+      toast.error("Bitte überprüfen Sie Ihre Eingaben.")
       return
     }
 
-    setValidationErrors([])
-    setStep((prev) => Math.min(prev + 1, 5))
+    // Specific checks for the new step structure
+    if (step === 1 && !formData.carId) {
+      toast.error("Bitte wählen Sie ein Fahrzeug aus.")
+      return
+    }
+    if (step === 4 && (!formData.firstName || !formData.lastName || !formData.email || !formData.phone)) {
+      toast.error("Bitte füllen Sie alle Kontaktdaten aus.")
+      return
+    }
+    if (step === 3) {
+      const driver1 = driverData.driver1
+      if (!driver1.firstName || !driver1.lastName || !driver1.birthDate || !driver1.licenseIssueDate) {
+        toast.error("Bitte füllen Sie alle Daten für den Hauptfahrer aus.")
+        return
+      }
+      if (selectedExtras.includes("1")) {
+        // Assuming '1' is the ID for additional driver
+        const driver2 = driverData.driver2
+        if (!driver2.firstName || !driver2.lastName || !driver2.birthDate || !driver2.licenseIssueDate) {
+          toast.error("Bitte füllen Sie alle Daten für den zusätzlichen Fahrer aus.")
+          return
+        }
+        if (areDriversIdentical(driver1, driver2)) {
+          toast.error("Hauptfahrer und Zusatzfahrer dürfen nicht identisch sein.")
+          return
+        }
+      }
+    }
+
+    setStep((prev) => Math.min(prev + 1, totalSteps))
   }
 
   // Unified handler for going back
@@ -755,101 +808,95 @@ export default function BookingModal({
   // Renamed states for clarity
   const isSubmitting = submitting
   const isBookingComplete = bookingComplete
+  const isBooking = submitting // Alias for clarity in the button
 
   // Renamed function for clarity
   const canProceedToNextStep = () => canProceed()
+  const handleBooking = handleSubmit // Alias for the submit button
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[90vw] md:max-w-[1100px] lg:max-w-[1200px] max-h-[90vh] sm:max-h-[85vh] p-4 sm:p-6 md:p-10 rounded-xl sm:rounded-2xl overflow-auto">
-        <DialogTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-          Fahrzeug buchen
-        </DialogTitle>
-        <form className="flex h-full flex-col" onSubmit={handleSubmit}>
-          <div className="mt-3 sm:mt-4 mb-4 sm:mb-6">
-            {/* Mobile: Icon-only indicators */}
-            <div className="flex md:hidden items-center justify-center gap-2">
-              {[
-                { number: 1, label: "Zeitraum" },
-                { number: 2, label: "Fahrzeug" },
-                { number: 3, label: "Extras" },
-                { number: 4, label: "Fahrerdaten" },
-                { number: 5, label: "Bestätigen" },
-              ].map((stepInfo, index) => (
-                <React.Fragment key={stepInfo.number}>
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
-                      step === stepInfo.number
-                        ? "bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/20"
-                        : step > stepInfo.number
-                          ? "bg-green-500 text-white"
-                          : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {step > stepInfo.number ? <Check className="w-4 h-4" /> : stepInfo.number}
-                  </div>
-                  {index < 4 && <div className="w-4 sm:w-6 h-0.5 bg-muted" />}
-                </React.Fragment>
-              ))}
+      {/* <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[90vw] md:max-w-[1100px] lg:max-w-[1200px] max-h-[90vh] sm:max-h-[85vh] p-4 sm:p-6 md:p-10 rounded-xl sm:rounded-2xl overflow-auto"> */}
+      {/* Updated DialogContent to match the updates */}
+      <DialogContent className="w-[95vw] max-w-6xl h-[90vh] max-h-[900px] p-0 overflow-hidden">
+        <div className="flex flex-col h-full">
+          {/* <div className="mt-3 sm:mt-4 mb-4 sm:mb-6"> */}
+          <div className="border-b px-4 sm:px-6 py-3 sm:py-4">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              {/* <DialogTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
+                Fahrzeug buchen
+              </DialogTitle> */}
+              <DialogTitle className="text-lg sm:text-xl md:text-2xl font-bold">Buchung</DialogTitle>
+              <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 sm:h-10 sm:w-10">
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
+              </Button>
             </div>
 
-            {/* Desktop: Full indicators with labels */}
-            <div className="hidden md:flex items-center justify-center gap-4">
+            {/* Mobile: Show only current step */}
+            <div className="sm:hidden">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-semibold text-sm">
+                  {step}
+                </div>
+                <span className="text-sm font-medium text-foreground">
+                  {step === 1 && "Daten & Fahrzeug"}
+                  {step === 2 && "Extras"}
+                  {step === 3 && "Fahrerdaten"}
+                  {step === 4 && "Bestätigung"}
+                </span>
+              </div>
+              <div className="w-full bg-muted rounded-full h-1.5">
+                <div
+                  className="bg-primary h-1.5 rounded-full transition-all duration-300"
+                  style={{ width: `${(step / totalSteps) * 100}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Desktop: Show all steps */}
+            <div className="hidden sm:flex items-center justify-between gap-2">
               {[
-                { number: 1, label: "Zeitraum" },
-                { number: 2, label: "Fahrzeug" },
-                { number: 3, label: "Extras" },
-                { number: 4, label: "Fahrerdaten" },
-                { number: 5, label: "Bestätigen" },
-              ].map((stepInfo, index) => (
-                <React.Fragment key={stepInfo.number}>
-                  <div className="flex flex-col items-center gap-1">
+                { number: 1, label: "Daten & Fahrzeug" },
+                { number: 2, label: "Extras" },
+                { number: 3, label: "Fahrerdaten" },
+                { number: 4, label: "Bestätigung" },
+              ].map((s, index) => (
+                <React.Fragment key={s.number}>
+                  <div className="flex flex-col items-center gap-1.5 flex-1">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-semibold transition-all ${
-                        step === stepInfo.number
-                          ? "bg-primary text-primary-foreground shadow"
-                          : step > stepInfo.number
-                            ? "bg-green-500 text-white"
-                            : "bg-muted text-muted-foreground"
+                      className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full font-semibold text-sm sm:text-base transition-colors ${
+                        step >= s.number ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      {step > stepInfo.number ? <Check className="w-5 h-5" /> : stepInfo.number}
+                      {s.number}
                     </div>
                     <span
-                      className={`text-xs md:text-sm font-medium ${
-                        step === stepInfo.number ? "text-foreground" : "text-muted-foreground"
+                      className={`text-xs sm:text-sm font-medium text-center ${
+                        step >= s.number ? "text-foreground" : "text-muted-foreground"
                       }`}
                     >
-                      {stepInfo.label}
+                      {s.label}
                     </span>
                   </div>
-                  {index < 4 && <div className="w-12 h-0.5 bg-muted" />}
+                  {index < 3 && (
+                    <div className={`h-0.5 flex-1 transition-colors ${step > s.number ? "bg-primary" : "bg-muted"}`} />
+                  )}
                 </React.Fragment>
               ))}
-            </div>
-
-            {/* Mobile: Current step label below */}
-            <div className="flex md:hidden justify-center mt-3">
-              <span className="text-sm font-medium text-foreground">
-                {step === 1 && "Zeitraum wählen"}
-                {step === 2 && "Fahrzeug wählen"}
-                {step === 3 && "Extras wählen"}
-                {step === 4 && "Fahrerdaten eingeben"}
-                {step === 5 && "Buchung bestätigen"}
-              </span>
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 px-1">
+          {/* <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 px-1"> */}
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6">
             {/* Step 1: Datum */}
             {step === 1 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 text-foreground">
-                    Wann möchten Sie das Fahrzeug mieten?
+                    Buchungsdaten eingeben
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Wählen Sie Abhol- und Rückgabedatum mit Uhrzeit
+                    Wählen Sie Datum, Uhrzeit und Standorte für Ihre Buchung
                   </p>
                 </div>
 
@@ -957,7 +1004,7 @@ export default function BookingModal({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6">
                   <div className="space-y-2 sm:space-y-3">
                     <Label htmlFor="returnDate" className="flex items-center gap-2 font-medium text-sm sm:text-base">
                       <CalendarIcon className="w-4 h-4 text-primary" />
@@ -1072,84 +1119,82 @@ export default function BookingModal({
                     "Verfügbare Fahrzeuge anzeigen"
                   )}
                 </Button>
-              </div>
-            )}
 
-            {/* Step 2: Fahrzeuge */}
-            {step === 2 && showVehicles && (
-              <div className="space-y-4 sm:space-y-6">
-                <div>
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 text-foreground">
-                    Wählen Sie Ihr Fahrzeug
-                  </h2>
-                  <p className="text-sm sm:text-base text-muted-foreground">
-                    {availableCars.length} verfügbare {availableCars.length === 1 ? "Fahrzeug" : "Fahrzeuge"}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                  {cars.length === 0 && !loadingCars ? (
-                    <div className="col-span-full py-8 text-center text-muted-foreground">
-                      Keine Fahrzeuge für den ausgewählten Zeitraum verfügbar.
+                {showVehicles && (
+                  <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t">
+                    <div className="mb-4 sm:mb-6">
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 text-foreground">
+                        Verfügbare Fahrzeuge
+                      </h3>
+                      <p className="text-sm sm:text-base text-muted-foreground">
+                        {availableCars.length} {availableCars.length === 1 ? "Fahrzeug" : "Fahrzeuge"} verfügbar
+                      </p>
                     </div>
-                  ) : (
-                    cars.map((car) => {
-                      const isSelected = formData.carId === car.id
-                      return (
-                        <div
-                          key={car.id}
-                          onClick={() => setFormData((prev) => ({ ...prev, carId: car.id }))}
-                          className={`border rounded-lg p-3 cursor-pointer transition-all ${
-                            isSelected
-                              ? "border-primary bg-primary/5 shadow-sm"
-                              : "border-border hover:border-primary/50"
-                          }`}
-                        >
-                          <div className="flex gap-3">
-                            {car.image_url && (
-                              <img
-                                src={car.image_url || "/placeholder.svg"}
-                                alt={`${car.name} ${car.year}`}
-                                className="w-28 h-20 object-cover rounded"
-                              />
-                            )}
-                            <div className="flex-1">
-                              <div className="flex items-start justify-between gap-2">
-                                <div>
-                                  <h4 className="font-semibold text-foreground">
-                                    {car.name} {car.year}
-                                  </h4>
-                                  <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                                    <span className="flex items-center gap-1">
-                                      <Users size={12} /> {car.seats}
-                                    </span>
-                                    <span>{car.transmission}</span>
-                                    <span>{car.fuel_type}</span>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                      {cars.length === 0 && !loadingCars ? (
+                        <div className="col-span-full py-8 text-center text-muted-foreground">
+                          Keine Fahrzeuge für den ausgewählten Zeitraum verfügbar.
+                        </div>
+                      ) : (
+                        cars.map((car) => {
+                          const isSelected = formData.carId === car.id
+                          return (
+                            <div
+                              key={car.id}
+                              onClick={() => setFormData((prev) => ({ ...prev, carId: car.id }))}
+                              className={`border rounded-lg p-3 cursor-pointer transition-all ${
+                                isSelected
+                                  ? "border-primary bg-primary/5 shadow-sm"
+                                  : "border-border hover:border-primary/50"
+                              }`}
+                            >
+                              <div className="flex gap-3">
+                                {car.image_url && (
+                                  <img
+                                    src={car.image_url || "/placeholder.svg"}
+                                    alt={`${car.name} ${car.year}`}
+                                    className="w-28 h-20 object-cover rounded"
+                                  />
+                                )}
+                                <div className="flex-1">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                      <h4 className="font-semibold text-foreground">
+                                        {car.name} {car.year}
+                                      </h4>
+                                      <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
+                                        <span className="flex items-center gap-1">
+                                          <Users size={12} /> {car.seats}
+                                        </span>
+                                        <span>{car.transmission}</span>
+                                        <span>{car.fuel_type}</span>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="text-lg font-bold text-primary">CHF {car.price_per_day}</div>
+                                      <div className="text-[11px] text-muted-foreground">pro Tag</div>
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="text-right">
-                                  <div className="text-lg font-bold text-primary">CHF {car.price_per_day}</div>
-                                  <div className="text-[11px] text-muted-foreground">pro Tag</div>
+                                  {isSelected && (
+                                    <div className="mt-1 flex items-center gap-1 text-primary text-xs">
+                                      <Check size={14} />
+                                      <span className="font-medium">Ausgewählt</span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                              {isSelected && (
-                                <div className="mt-1 flex items-center gap-1 text-primary text-xs">
-                                  <Check size={14} />
-                                  <span className="font-medium">Ausgewählt</span>
-                                </div>
-                              )}
                             </div>
-                          </div>
-                        </div>
-                      )
-                    })
-                  )}
-                </div>
+                          )
+                        })
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Step 3: Extras */}
-            {step === 3 && (
+            {step === 2 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 text-foreground">
@@ -1240,8 +1285,7 @@ export default function BookingModal({
               </div>
             )}
 
-            {/* Step 4: Fahrerdaten */}
-            {step === 4 && (
+            {step === 3 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 text-foreground">
@@ -1321,7 +1365,7 @@ export default function BookingModal({
                     </div>
                   </div>
 
-                  {selectedExtras.includes("additional_driver") && (
+                  {selectedExtras.includes("1") && ( // Using ID '1' for additional driver
                     <div className="border border-primary/20 rounded-xl p-5 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/20 dark:to-pink-950/20">
                       <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
                         <Users className="h-5 w-5" />
@@ -1395,8 +1439,7 @@ export default function BookingModal({
               </div>
             )}
 
-            {/* Step 5: Bestätigen */}
-            {step === 5 && (
+            {step === 4 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
                   <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-1 sm:mb-2 text-foreground">
@@ -1539,7 +1582,7 @@ export default function BookingModal({
             )}
           </div>
 
-          <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
+          {/* <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
             {step > 1 && (
               <Button
                 type="button"
@@ -1577,8 +1620,40 @@ export default function BookingModal({
                 )}
               </Button>
             )}
+          </div> */}
+          <div className="border-t px-4 sm:px-6 md:px-8 py-3 sm:py-4 flex justify-between items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePreviousStep}
+              disabled={step === 1}
+              className="h-10 sm:h-11 bg-transparent"
+            >
+              <ChevronLeft className="mr-1 h-4 w-4" />
+              Zurück
+            </Button>
+
+            {step < totalSteps && (
+              <Button type="button" onClick={handleNextStep} className="h-10 sm:h-11">
+                Weiter
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            )}
+
+            {step === totalSteps && (
+              <Button type="button" onClick={handleBooking} disabled={isBooking} className="h-10 sm:h-11 min-w-[120px]">
+                {isBooking ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Wird gebucht...
+                  </>
+                ) : (
+                  "Jetzt buchen"
+                )}
+              </Button>
+            )}
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   )
