@@ -1,6 +1,6 @@
 "use client"
 
-import { Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin, Cookie } from "lucide-react"
+import { Mail, Phone, MapPin, Instagram, Cookie } from "lucide-react"
 import Image from "next/image"
 
 export default function Footer() {
@@ -18,13 +18,14 @@ export default function Footer() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Company Info */}
             <div>
-              <div className="mb-4">
+              <div className="mb-4 h-10 flex items-center">
                 <Image
-                  src="/rentigo-logo.jpg"
+                  src="/images/549916570-17847038667563613-3680059545850272019-n.jpg"
                   alt="Rentigo Rentals"
                   width={120}
                   height={40}
-                  className="brightness-0 invert"
+                  className="brightness-0 invert object-contain"
+                  priority
                 />
               </div>
               <p className="text-primary-foreground/80">Ihre vertrauenswürdige Plattform für Mietwagen seit 2025.</p>
@@ -39,17 +40,13 @@ export default function Footer() {
                     Über uns
                   </a>
                 </li>
-                <li>
-                  
-                </li>
+                <li>{/* Placeholder for additional link */}</li>
                 <li>
                   <a href="#" className="hover:text-primary-foreground transition">
                     Blog
                   </a>
                 </li>
-                <li>
-                  
-                </li>
+                <li>{/* Placeholder for additional link */}</li>
               </ul>
             </div>
 
@@ -57,9 +54,7 @@ export default function Footer() {
             <div>
               <h4 className="font-bold mb-4">Hilfe</h4>
               <ul className="space-y-2 text-primary-foreground/80">
-                <li>
-                  
-                </li>
+                <li>{/* Placeholder for additional link */}</li>
                 <li>
                   <a href="/kontakt" className="hover:text-primary-foreground transition">
                     Kontakt
@@ -117,16 +112,21 @@ export default function Footer() {
             {/* Social Links */}
             <div className="flex gap-4 mt-4 md:mt-0">
               <a href="#" className="p-2 rounded-lg hover:bg-primary-foreground/10 transition">
-                
+                {/* Placeholder for Facebook link */}
               </a>
               <a href="#" className="p-2 rounded-lg hover:bg-primary-foreground/10 transition">
-                
+                {/* Placeholder for Twitter link */}
               </a>
-              <a href="#" className="p-2 rounded-lg hover:bg-primary-foreground/10 transition">
+              <a
+                href="https://www.instagram.com/rentigo_rentals/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg hover:bg-primary-foreground/10 transition"
+              >
                 <Instagram size={20} />
               </a>
               <a href="#" className="p-2 rounded-lg hover:bg-primary-foreground/10 transition">
-                
+                {/* Placeholder for LinkedIn link */}
               </a>
             </div>
           </div>
