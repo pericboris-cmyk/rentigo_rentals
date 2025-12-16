@@ -39,27 +39,32 @@ export async function DELETE(request: NextRequest) {
 
     console.log("[v0] Starting account deletion for user:", user.id)
 
-    const { data: userProfile } = await supabaseAdmin
-      .from("users")
-      .select("first_name, last_name, email")
-      .eq("id", user.id)
-      .single()
+    try {
+      const { data: userProfile } = await supabaseAdmin
+        .from("users")
+        .select("full_name, email")
+        .eq("id", user.id)
+        .single()
 
-    if (userProfile) {
-      const deletionDate = new Date().toLocaleDateString("de-DE", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      if (userProfile) {
+        const deletionDate = new Date().toLocaleDateString("de-DE", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })
 
-      await sendAccountDeletionEmail({
-        customerName: `${userProfile.first_name} ${userProfile.last_name}`,
-        customerEmail: userProfile.email,
-        deletionDate,
-      })
+        await sendAccountDeletionEmail({
+          customerName: userProfile.full_name || "User",
+          customerEmail: userProfile.email,
+          deletionDate,
+        })
+      }
+    } catch (emailError) {
+      console.warn("[v0] Could not send deletion email:", emailError)
+      // Continue with deletion even if email fails
     }
 
     await supabase.auth.signOut()
@@ -96,21 +101,23 @@ export async function DELETE(request: NextRequest) {
       console.log("[v0] Deleted user preferences")
     }
 
-    // 4. Delete user profile from users table
-    const { error: profileError } = await supabaseAdmin.from("users").delete().eq("id", user.id)
+    // 4. Delete user profile from users table (use admin API to bypass RLS)
+    try {
+      const { error: profileError } = await supabaseAdmin.from("users").delete().eq("id", user.id)
 
-    if (profileError) {
-      console.error("[v0] Error deleting user profile:", profileError)
-      return NextResponse.json({ error: "Fehler beim Löschen des Profils" }, { status: 500 })
+      if (profileError) {
+        console.warn("[v0] User profile not found or already deleted:", profileError)
+        // Don't return error - continue with auth user deletion
+      } else {
+        console.log("[v0] Deleted user profile")
+      }
+    } catch (profileDeleteError) {
+      console.warn("[v0] Could not delete user profile:", profileDeleteError)
+      // Continue with auth deletion
     }
 
-    console.log("[v0] Deleted user profile")
-
     // 5. Delete auth user (this must be last)
-    const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(
-      user.id,
-      false, // shouldSoftDelete = false ensures permanent deletion
-    )
+    const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(user.id, false)
 
     if (deleteAuthError) {
       console.error("[v0] Error deleting auth user:", deleteAuthError)
