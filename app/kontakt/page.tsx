@@ -273,17 +273,15 @@ export default function KontaktPage() {
           </div>
 
           <div
-            className="w-full rounded-2xl overflow-hidden border border-border shadow-lg bg-muted"
+            className="w-full rounded-2xl overflow-hidden border border-border shadow-lg"
             style={{ minHeight: "420px", height: "420px" }}
           >
             <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2698.5!2d7.7!3d47.3!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x478d2fbb819b2411%3A0x5d627e5c25bf2e9e!2sRentigo%20Rentals!5e0!3m2!1sde!2sch!4v1"
+              src="https://storage.googleapis.com/maps-solutions-fe0gtdv8pp/locator-plus/tp2f/locator-plus.html"
               width="100%"
               height="100%"
               style={{ border: 0 }}
-              allowFullScreen
               loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
               title="Rentigo Rentals Location"
             />
           </div>
