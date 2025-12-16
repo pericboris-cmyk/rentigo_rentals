@@ -269,18 +269,19 @@ export default function KontaktPage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-foreground mb-4">Besuchen Sie uns</h2>
-            <p className="text-muted-foreground">Unsere Hauptniederlassung befindet sich im Herzen von Zürich</p>
+            <p className="text-muted-foreground">Unsere Hauptniederlassung befindet sich in Kestenholz, Schweiz</p>
           </div>
 
-          <div className="aspect-video rounded-2xl overflow-hidden border border-border shadow-lg">
+          <div
+            className="w-full rounded-2xl overflow-hidden border border-border shadow-lg"
+            style={{ minHeight: "420px", height: "420px" }}
+          >
             <iframe
-              src={`https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d10805.094740354558!2d8.537773476650193!3d47.37687997116812!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A${process.env.NEXT_PUBLIC_GOOGLE_PLACE_ID || "0x3d12eb495e5b57cc"}!2zUmVudGlnbyBSZW50YWxz!5e0!3m2!1sen!2sus!4v1704909999999!5m2!1sen!2sus`}
+              src="https://storage.googleapis.com/maps-solutions-fe0gtdv8pp/locator-plus/7b9f/locator-plus.html"
               width="100%"
               height="100%"
               style={{ border: 0 }}
-              allowFullScreen
               loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
               title="Rentigo Rentals Location"
             />
           </div>
