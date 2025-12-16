@@ -44,12 +44,12 @@ import {
   validateBookingDates,
   areDriversIdentical,
   validateLocationAddress,
-  getEarliestPickupDate, // New function from updates
-  getAvailableTimeSlots, // New function from updates
-  isDateDisabledForBooking, // New function from updates
+  getEarliestPickupDate,
+  getAvailableTimeSlots,
+  isDateDisabledForBooking,
   type ValidationError,
 } from "@/lib/booking-validation"
-import { cn } from "@/lib/utils" // Import cn utility
+import { cn } from "@/lib/utils"
 
 const formatDateForDB = (date: Date): string => {
   const year = date.getFullYear()
@@ -185,7 +185,6 @@ export default function BookingModal({
 
   useEffect(() => {
     if (isOpen && !user) {
-      // User is not logged in, redirect to login with return URL
       const carParam = preselectedCarId ? `?carId=${preselectedCarId}` : ""
       router.push(`/login?redirect=${encodeURIComponent(`/fahrzeuge${carParam}`)}`)
       onClose()
@@ -252,7 +251,6 @@ export default function BookingModal({
     }
   }, [isOpen])
 
-  // Extras dynamisch laden
   useEffect(() => {
     const fetchExtras = async () => {
       try {
@@ -276,8 +274,6 @@ export default function BookingModal({
       fetchExtras()
     }
   }, [isOpen])
-
-  // useEffect that automatically loaded cars has been removed
 
   const fetchLocations = async () => {
     setLoading(true)
@@ -384,7 +380,6 @@ export default function BookingModal({
       return false
     }
 
-    // Validate dates
     const dateError = validateBookingDates(
       formData.pickupDate,
       formData.pickupTime,
@@ -393,7 +388,6 @@ export default function BookingModal({
     )
     if (dateError) return false
 
-    // Validate addresses
     const pickupAddressError = validateLocationAddress(formData.pickupAddress, "Abholstandort")
     if (pickupAddressError) return false
 
@@ -429,7 +423,6 @@ export default function BookingModal({
 
     switch (step) {
       case 1: {
-        // Validate booking dates
         const dateError = validateBookingDates(
           formData.pickupDate,
           formData.pickupTime,
@@ -463,7 +456,6 @@ export default function BookingModal({
         const licenseIssueError = validateLicenseIssueDate(driver1.licenseIssueDate, driver1.birthDate)
         if (licenseIssueError) errors.push(licenseIssueError)
 
-        // Validate additional driver if selected
         if (selectedExtras.includes("additional_driver")) {
           const driver2 = driverData.driver2
 
@@ -483,7 +475,6 @@ export default function BookingModal({
           )
           if (d2LicenseIssueError) errors.push(d2LicenseIssueError)
 
-          // Check if drivers are identical
           if (areDriversIdentical(driver1, driver2)) {
             errors.push({
               field: "Zusatzfahrer",
@@ -511,26 +502,6 @@ export default function BookingModal({
 
     setValidationErrors(errors)
     return errors.length === 0
-  }
-
-  const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1)
-    } else {
-      handleClose()
-    }
-  }
-
-  const handleNext = () => {
-    if (!canProceed()) return
-
-    // Validate current step before proceeding
-    if (!validateCurrentStep()) {
-      return
-    }
-
-    setValidationErrors([])
-    setStep((prev) => Math.min(prev + 1, 4)) // Max step is now 4
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -566,9 +537,9 @@ export default function BookingModal({
         pickupDate: formData.pickupDate,
         dropoffDate: formData.returnDate,
         pickupTime: formData.pickupTime,
-        dropoffTime: formData.returnTime, // Changed from returnTime to dropoffTime
-        pickupAddress: formData.pickupAddress, // Changed from pickupLocationId to pickupAddress
-        dropoffAddress: formData.dropoffAddress, // Changed from dropoffLocationId to dropoffAddress
+        dropoffTime: formData.returnTime,
+        pickupAddress: formData.pickupAddress,
+        dropoffAddress: formData.dropoffAddress,
         carId: formData.carId,
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -621,44 +592,6 @@ export default function BookingModal({
     }
   }
 
-  const resetForm = () => {
-    setFormData({
-      pickupDate: "",
-      returnDate: "",
-      pickupTime: "09:00", // Reset pickup time
-      returnTime: "09:00", // Reset return time
-      pickupLocationId: "",
-      dropoffLocationId: "",
-      // Resetting address fields as well
-      pickupAddress: "",
-      dropoffAddress: "",
-      carId: preselectedCarId || "",
-      firstName: user?.full_name?.split(" ")[0] || "",
-      lastName: user?.full_name?.split(" ").slice(1).join(" ") || "",
-      email: user?.email || "",
-      phone: "",
-      totalPrice: 0, // Reset totalPrice
-      extras: {
-        services: [], // Reset services
-        drivers: {
-          mainDriver: null, // Reset main driver
-          additionalDriver: null, // Reset additional driver
-        },
-      },
-    })
-    setSelectedExtras([])
-    setDriverData({
-      driver1: { firstName: "", lastName: "", birthDate: "", licenseIssueDate: "" }, // Removed licenseNumber
-      driver2: { firstName: "", lastName: "", birthDate: "", licenseIssueDate: "" }, // Removed licenseNumber
-    })
-    setStep(1)
-    setError("")
-    setCars([])
-    setValidationErrors([])
-    setBookingComplete(false)
-    setBookingId("")
-  }
-
   const handleClose = () => {
     setShowVehicles(false)
     setCars([])
@@ -675,12 +608,12 @@ export default function BookingModal({
       lastName: "",
       email: "",
       phone: "",
-      totalPrice: 0, // Reset totalPrice
+      totalPrice: 0,
       extras: {
-        services: [], // Reset services
+        services: [],
         drivers: {
-          mainDriver: null, // Reset main driver
-          additionalDriver: null, // Reset additional driver
+          mainDriver: null,
+          additionalDriver: null,
         },
       },
     })
@@ -708,35 +641,25 @@ export default function BookingModal({
   const total = calculateTotalPrice()
   const days = calculateDays()
 
-  // Memoized available cars and validity check for Step 1
   const availableCars = useMemo(() => cars, [cars])
   const isStep1Valid = isStep1Complete()
 
-  // Handler for loading vehicles, consolidating logic
   const handleLoadVehicles = () => {
     if (!isStep1Valid) {
-      validateCurrentStep() // Trigger validation to show errors
+      validateCurrentStep()
       return
     }
     fetchAvailableCars()
   }
 
-  // Unified handler for proceeding to the next step
   const handleNextStep = () => {
-    // Updated step logic to align with new flow
     if (!canProceed()) return
-
-    if (!validateCurrentStep()) {
-      return
-    }
-
+    if (!validateCurrentStep()) return
     setValidationErrors([])
-    setStep((prev) => Math.min(prev + 1, 4)) // Max step is now 4
+    setStep((prev) => Math.min(prev + 1, 4))
   }
 
-  // Unified handler for going back
   const handlePreviousStep = () => {
-    // Updated step logic to align with new flow
     if (step > 1) {
       setStep(step - 1)
     } else {
@@ -744,14 +667,8 @@ export default function BookingModal({
     }
   }
 
-  // Renamed states for clarity
   const isSubmitting = submitting
-  const isBookingComplete = bookingComplete
-
-  // Renamed function for clarity
   const canProceedToNextStep = () => canProceed()
-
-  // Renamed submit handler for clarity
   const handleBooking = handleSubmit
 
   return (
@@ -760,11 +677,10 @@ export default function BookingModal({
         <DialogTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
           Fahrzeug buchen
         </DialogTitle>
+
         <form className="flex h-full flex-col" onSubmit={handleBooking}>
           <div className="mt-3 sm:mt-4 mb-4 sm:mb-6">
-            {/* Mobile: Icon-only indicators */}
             <div className="flex md:hidden items-center justify-center gap-2">
-              {/* Updated step indicators to reflect new 4-step flow */}
               {[
                 { num: 1, label: "Zeitraum & Fahrzeug" },
                 { num: 2, label: "Extras" },
@@ -788,8 +704,6 @@ export default function BookingModal({
               ))}
             </div>
 
-            {/* Desktop: Full indicators with labels */}
-            {/* Updated step indicators to reflect new 4-step flow */}
             <div className="hidden md:flex items-center justify-center gap-3">
               {[
                 { num: 1, label: "Zeitraum & Fahrzeug" },
@@ -827,7 +741,6 @@ export default function BookingModal({
               ))}
             </div>
 
-            {/* Mobile: Current step label below */}
             <div className="flex md:hidden justify-center mt-3">
               <span className="text-sm font-medium text-foreground">
                 {step === 1 && "Zeitraum & Fahrzeug wählen"}
@@ -839,8 +752,6 @@ export default function BookingModal({
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 px-1">
-            {/* Step 1: Datum + Fahrzeuge (kombiniert) */}
-            {/* Step 1: Datum + Fahrzeuge (kombiniert) */}
             {step === 1 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
@@ -887,7 +798,6 @@ export default function BookingModal({
                                   pickupDate: newPickupDate,
                                 }
 
-                                // Auto-adjust pickup time if current time is not valid for selected date
                                 const availableSlots = getAvailableTimeSlots(date)
                                 if (prev.pickupTime && !availableSlots.includes(prev.pickupTime)) {
                                   updates.pickupTime = availableSlots[0] || "09:00"
@@ -905,6 +815,7 @@ export default function BookingModal({
                       </PopoverContent>
                     </Popover>
                   </div>
+
                   <div className="space-y-2 sm:space-y-3">
                     <Label htmlFor="pickupTime" className="flex items-center gap-2 font-medium text-sm sm:text-base">
                       <Clock className="w-4 h-4 text-primary" />
@@ -999,6 +910,7 @@ export default function BookingModal({
                       </PopoverContent>
                     </Popover>
                   </div>
+
                   <div className="space-y-2 sm:space-y-3">
                     <Label htmlFor="returnTime" className="flex items-center gap-2 font-medium text-sm sm:text-base">
                       <Clock className="w-4 h-4 text-primary" />
@@ -1037,6 +949,7 @@ export default function BookingModal({
                       required
                     />
                   </div>
+
                   <div className="space-y-2 sm:space-y-3">
                     <Label
                       htmlFor="dropoffAddress"
@@ -1252,8 +1165,9 @@ export default function BookingModal({
                       <IdCard className="h-5 w-5" />
                       Hauptfahrer
                     </h3>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor="driver1-firstName">Vorname *</Label>
                         <Input
                           id="driver1-firstName"
@@ -1265,10 +1179,12 @@ export default function BookingModal({
                             }))
                           }
                           placeholder="Max"
+                          className="h-11 px-4"
                           required
                         />
                       </div>
-                      <div>
+
+                      <div className="space-y-2">
                         <Label htmlFor="driver1-lastName">Nachname *</Label>
                         <Input
                           id="driver1-lastName"
@@ -1280,10 +1196,13 @@ export default function BookingModal({
                             }))
                           }
                           placeholder="Mustermann"
+                          className="h-11 px-4"
                           required
                         />
                       </div>
-                      <div>
+
+                      {/* FIX: gleiche Höhe wie Führerschein-Ausstellungsdatum */}
+                      <div className="space-y-2">
                         <Label htmlFor="driver1-birthDate">Geburtsdatum *</Label>
                         <Input
                           id="driver1-birthDate"
@@ -1295,9 +1214,11 @@ export default function BookingModal({
                               driver1: { ...prev.driver1, birthDate: e.target.value },
                             }))
                           }
+                          className="h-11 px-4"
                           required
                         />
                       </div>
+
                       <div className="space-y-2">
                         <Label htmlFor="driver1-licenseIssueDate">Führerschein-Ausstellungsdatum *</Label>
                         <Input
@@ -1323,8 +1244,9 @@ export default function BookingModal({
                         <Users className="h-5 w-5" />
                         Zusätzlicher Fahrer
                       </h3>
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                        <div>
+                        <div className="space-y-2">
                           <Label htmlFor="driver2-firstName">Vorname *</Label>
                           <Input
                             id="driver2-firstName"
@@ -1336,10 +1258,12 @@ export default function BookingModal({
                               }))
                             }
                             placeholder="Anna"
+                            className="h-11 px-4"
                             required
                           />
                         </div>
-                        <div>
+
+                        <div className="space-y-2">
                           <Label htmlFor="driver2-lastName">Nachname *</Label>
                           <Input
                             id="driver2-lastName"
@@ -1351,10 +1275,12 @@ export default function BookingModal({
                               }))
                             }
                             placeholder="Muster"
+                            className="h-11 px-4"
                             required
                           />
                         </div>
-                        <div>
+
+                        <div className="space-y-2">
                           <Label htmlFor="driver2-birthDate">Geburtsdatum *</Label>
                           <Input
                             id="driver2-birthDate"
@@ -1366,9 +1292,11 @@ export default function BookingModal({
                                 driver2: { ...prev.driver2, birthDate: e.target.value },
                               }))
                             }
+                            className="h-11 px-4"
                             required
                           />
                         </div>
+
                         <div className="space-y-2">
                           <Label htmlFor="driver2-licenseIssueDate">Führerschein-Ausstellungsdatum *</Label>
                           <Input
@@ -1381,6 +1309,7 @@ export default function BookingModal({
                                 driver2: { ...prev.driver2, licenseIssueDate: e.target.value },
                               }))
                             }
+                            className="h-11 px-4"
                             required
                           />
                         </div>
@@ -1481,28 +1410,26 @@ export default function BookingModal({
                         </div>
 
                         {selectedExtras.length > 0 && (
-                          <>
-                            <div className="pt-3">
-                              <div className="font-bold text-foreground mb-2 flex items-center gap-2">
-                                <Plus size={16} className="text-primary" />
-                                Zusatzleistungen
-                              </div>
-                              <div className="space-y-1 pl-4">
-                                {selectedExtras.map((extraId) => {
-                                  const extra = availableExtras.find((e) => e.id === extraId)
-                                  if (!extra) return null
-                                  return (
-                                    <div key={extraId} className="flex items-center justify-between py-0.5">
-                                      <span className="text-muted-foreground text-sm">{extra.name}</span>
-                                      <span className="text-foreground font-medium text-sm">
-                                        CHF {(extra.price_per_day * days).toFixed(2)}
-                                      </span>
-                                    </div>
-                                  )
-                                })}
-                              </div>
+                          <div className="pt-3">
+                            <div className="font-bold text-foreground mb-2 flex items-center gap-2">
+                              <Plus size={16} className="text-primary" />
+                              Zusatzleistungen
                             </div>
-                          </>
+                            <div className="space-y-1 pl-4">
+                              {selectedExtras.map((extraId) => {
+                                const extra = availableExtras.find((e) => e.id === extraId)
+                                if (!extra) return null
+                                return (
+                                  <div key={extraId} className="flex items-center justify-between py-0.5">
+                                    <span className="text-muted-foreground text-sm">{extra.name}</span>
+                                    <span className="text-foreground font-medium text-sm">
+                                      CHF {(extra.price_per_day * days).toFixed(2)}
+                                    </span>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
                         )}
 
                         <div className="border-t-2 border-primary/30 pt-3 mt-3 flex items-center justify-between bg-primary/5 rounded-lg p-3">
@@ -1543,6 +1470,7 @@ export default function BookingModal({
             >
               {step === 1 ? "Abbrechen" : "Zurück"}
             </Button>
+
             {step < 4 ? (
               <Button
                 type="button"

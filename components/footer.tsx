@@ -40,9 +40,7 @@ export default function Footer() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary-foreground transition">
-                    Karriere
-                  </a>
+                  
                 </li>
                 <li>
                   <a href="#" className="hover:text-primary-foreground transition">
@@ -50,9 +48,7 @@ export default function Footer() {
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:text-primary-foreground transition">
-                    Presse
-                  </a>
+                  
                 </li>
               </ul>
             </div>
@@ -62,9 +58,7 @@ export default function Footer() {
               <h4 className="font-bold mb-4">Hilfe</h4>
               <ul className="space-y-2 text-primary-foreground/80">
                 <li>
-                  <a href="#" className="hover:text-primary-foreground transition">
-                    FAQ
-                  </a>
+                  
                 </li>
                 <li>
                   <a href="/kontakt" className="hover:text-primary-foreground transition">
@@ -123,16 +117,16 @@ export default function Footer() {
             {/* Social Links */}
             <div className="flex gap-4 mt-4 md:mt-0">
               <a href="#" className="p-2 rounded-lg hover:bg-primary-foreground/10 transition">
-                <Facebook size={20} />
+                
               </a>
               <a href="#" className="p-2 rounded-lg hover:bg-primary-foreground/10 transition">
-                <Twitter size={20} />
+                
               </a>
               <a href="#" className="p-2 rounded-lg hover:bg-primary-foreground/10 transition">
                 <Instagram size={20} />
               </a>
               <a href="#" className="p-2 rounded-lg hover:bg-primary-foreground/10 transition">
-                <Linkedin size={20} />
+                
               </a>
             </div>
           </div>
