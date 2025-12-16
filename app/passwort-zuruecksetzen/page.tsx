@@ -114,17 +114,29 @@ function PasswordResetContent() {
             <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 space-y-4">
               <div className="flex items-center gap-3 text-destructive">
                 <AlertCircle size={24} />
-                <h3 className="font-semibold text-lg">Ungültiger Link</h3>
+                <h3 className="font-semibold text-lg">Ungültiger oder abgelaufener Link</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                Dieser Link zum Zurücksetzen des Passworts ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen
-                Link an.
+                Dieser Link zum Zurücksetzen des Passworts ist ungültig, wurde bereits verwendet oder ist abgelaufen.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Links sind nur 1 Stunde gültig und können nur einmal verwendet werden.
               </p>
             </div>
 
-            <div className="text-center">
-              <Link href="/passwort-vergessen" className="text-sm text-primary hover:underline">
+            <div className="space-y-3">
+              <Link
+                href="/passwort-vergessen"
+                className="w-full py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition font-semibold flex items-center justify-center gap-2 block text-center"
+              >
                 Neuen Link anfordern
+                <ArrowRight size={20} />
+              </Link>
+              <Link
+                href="/login"
+                className="w-full py-2 text-center text-sm text-muted-foreground hover:text-foreground transition block"
+              >
+                Zurück zur Anmeldung
               </Link>
             </div>
           </div>

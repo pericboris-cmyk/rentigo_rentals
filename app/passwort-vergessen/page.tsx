@@ -1,8 +1,9 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
+
+import type React from "react"
+import { useEffect } from "react"
 import { Mail, Loader2, ArrowLeft, CheckCircle, Info } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
@@ -11,6 +12,14 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
+
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [resendCooldown])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,9 +47,43 @@ export default function ForgotPasswordPage() {
       }
 
       setSuccess(true)
+      setResendCooldown(60)
       toast.success("Anfrage wurde verarbeitet!")
     } catch (error) {
       console.error("[v0] Forgot password error:", error)
+      toast.error("Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResend = async () => {
+    if (resendCooldown > 0) {
+      toast.error(`Bitte warten Sie noch ${resendCooldown} Sekunden`)
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      const response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        toast.error(data.error || "Fehler beim Versenden der E-Mail")
+        setLoading(false)
+        return
+      }
+
+      setResendCooldown(60)
+      toast.success("E-Mail wurde erneut versendet!")
+    } catch (error) {
+      console.error("[v0] Resend email error:", error)
       toast.error("Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.")
     } finally {
       setLoading(false)
@@ -115,6 +158,19 @@ export default function ForgotPasswordPage() {
                   </div>
                 </div>
               </div>
+
+              <button
+                onClick={handleResend}
+                disabled={loading || resendCooldown > 0}
+                className="w-full py-2 bg-secondary text-secondary-foreground rounded-lg hover:bg-secondary/90 transition font-semibold disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading && <Loader2 size={20} className="animate-spin" />}
+                {resendCooldown > 0
+                  ? `Erneut senden in ${resendCooldown}s`
+                  : loading
+                    ? "Wird gesendet..."
+                    : "E-Mail erneut senden"}
+              </button>
             </div>
           )}
 
