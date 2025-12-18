@@ -28,10 +28,8 @@ export default function HeroSection() {
       <section className="relative overflow-hidden bg-gradient-to-br from-background via-background to-secondary/30 pt-20 pb-16 md:pt-32 md:pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            
             {/* Left Content */}
             <div className="space-y-6">
-
               {/* Badge / Eyebrow */}
               <div className="inline-flex items-center gap-2 rounded-full border bg-background/70 px-4 py-2 text-sm font-semibold text-foreground shadow-sm backdrop-blur">
                 <span className="h-2 w-2 rounded-full bg-primary" />
@@ -58,6 +56,7 @@ export default function HeroSection() {
                 </button>
 
                 <button
+                  onClick={() => (window.location.href = "/ueber-uns")}
                   className="px-8 py-3 border-2 border-primary text-primary rounded-lg hover:bg-primary/10 transition font-semibold text-center"
                 >
                   Mehr erfahren
@@ -74,7 +73,6 @@ export default function HeroSection() {
                 className="relative w-full h-full object-cover rounded-2xl shadow-xl"
               />
             </div>
-
           </div>
         </div>
       </section>
@@ -85,10 +83,7 @@ export default function HeroSection() {
         onRegister={handleRegister}
       />
 
-      <BookingModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
+      <BookingModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>
   )
 }

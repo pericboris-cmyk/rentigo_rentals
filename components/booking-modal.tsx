@@ -159,8 +159,8 @@ export default function BookingModal({
 
   const [driverData, setDriverData] = useState({
     driver1: {
-      firstName: "",
-      lastName: "",
+      firstName: user?.full_name?.split(" ")[0] || "",
+      lastName: user?.full_name?.split(" ").slice(1).join(" ") || "",
       birthDate: "",
       licenseIssueDate: "",
     },

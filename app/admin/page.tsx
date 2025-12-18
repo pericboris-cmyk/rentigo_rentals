@@ -196,33 +196,37 @@ export default function AdminDashboardPage() {
               <p className="text-muted-foreground">Verwalten Sie Buchungen, Benutzer und Einstellungen</p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               <button
                 onClick={toggleChristmasPromo}
                 disabled={loadingPromo}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition ${
+                className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition ${
                   christmasPromoActive
                     ? "bg-red-600 hover:bg-red-700 text-white"
                     : "bg-green-600 hover:bg-green-700 text-white"
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                <Sparkles size={20} />
-                {christmasPromoActive ? "Aktion beenden" : "Aktion starten"}
+                <Sparkles size={16} className="sm:hidden" />
+                <Sparkles size={20} className="hidden sm:block" />
+                <span className="hidden sm:inline">{christmasPromoActive ? "Aktion beenden" : "Aktion starten"}</span>
+                <span className="sm:hidden">{christmasPromoActive ? "Beenden" : "Starten"}</span>
               </button>
 
               <button
                 onClick={sendTestPayment}
                 disabled={sendingTestPayment}
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm sm:text-base transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Receipt size={20} />
-                Testrechnung (CHF 1.00)
+                <Receipt size={16} className="sm:hidden" />
+                <Receipt size={20} className="hidden sm:block" />
+                <span className="hidden sm:inline">Testrechnung (CHF 1.00)</span>
+                <span className="sm:hidden">Test</span>
               </button>
 
               <button
                 onClick={toggleMaintenanceMode}
                 disabled={loadingMaintenance}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition ${
+                className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition ${
                   maintenanceMode
                     ? "bg-green-600 hover:bg-green-700 text-white"
                     : "bg-yellow-600 hover:bg-yellow-700 text-white"
@@ -230,13 +234,17 @@ export default function AdminDashboardPage() {
               >
                 {maintenanceMode ? (
                   <>
-                    <Power size={20} />
-                    Website aktivieren
+                    <Power size={16} className="sm:hidden" />
+                    <Power size={20} className="hidden sm:block" />
+                    <span className="hidden sm:inline">Website aktivieren</span>
+                    <span className="sm:hidden">An</span>
                   </>
                 ) : (
                   <>
-                    <Construction size={20} />
-                    In Wartung setzen
+                    <Construction size={16} className="sm:hidden" />
+                    <Construction size={20} className="hidden sm:block" />
+                    <span className="hidden sm:inline">In Wartung setzen</span>
+                    <span className="sm:hidden">Wartung</span>
                   </>
                 )}
               </button>
@@ -267,7 +275,7 @@ export default function AdminDashboardPage() {
             </div>
           ) : stats ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
                 <div className="bg-card border border-border rounded-lg p-6">
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
                     <Calendar className="text-primary" size={24} />
@@ -301,7 +309,7 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <Link
                   href="/admin/bookings"
                   className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 transition"
