@@ -798,6 +798,16 @@ export default function BookingModal({
                                   pickupDate: newPickupDate,
                                 }
 
+                                // If return date is set and before new pickup date, clear it with notification
+                                if (prev.returnDate && new Date(prev.returnDate) < date) {
+                                  updates.returnDate = ""
+                                  toast({
+                                    title: "Rückgabedatum aktualisiert",
+                                    description: "Bitte Rückgabedatum neu wählen (muss ab Abholdatum sein).",
+                                    variant: "default",
+                                  })
+                                }
+
                                 const availableSlots = getAvailableTimeSlots(date)
                                 if (prev.pickupTime && !availableSlots.includes(prev.pickupTime)) {
                                   updates.pickupTime = availableSlots[0] || "09:00"
@@ -878,16 +888,15 @@ export default function BookingModal({
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full h-11 px-4 bg-transparent text-left font-normal",
+                            "w-full justify-start text-left font-normal",
                             !formData.returnDate && "text-muted-foreground",
                           )}
+                          disabled={!formData.pickupDate}
                         >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {formData.returnDate ? (
-                            format(new Date(formData.returnDate + "T12:00:00"), "PPP", { locale: de })
-                          ) : (
-                            <span>Datum wählen</span>
-                          )}
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {formData.returnDate
+                            ? format(new Date(formData.returnDate + "T12:00:00"), "dd.MM.yyyy")
+                            : "Rückgabedatum wählen"}
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0">
@@ -904,8 +913,14 @@ export default function BookingModal({
                           }}
                           initialFocus
                           locale={de}
-                          fromDate={getEarliestPickupDate()}
-                          disabled={isDateDisabledForBooking}
+                          fromDate={formData.pickupDate ? new Date(formData.pickupDate + "T12:00:00") : new Date()}
+                          disabled={(date) => {
+                            // Disable all dates before pickup date
+                            if (formData.pickupDate && new Date(date) < new Date(formData.pickupDate + "T12:00:00")) {
+                              return true
+                            }
+                            return isDateDisabledForBooking(date)
+                          }}
                         />
                       </PopoverContent>
                     </Popover>

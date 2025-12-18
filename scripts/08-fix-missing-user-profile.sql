@@ -18,8 +18,13 @@ AND NOT EXISTS (
 ON CONFLICT (id) DO NOTHING;
 
 -- Create a function to automatically sync auth users to public.users
+-- Added SET search_path = public for security
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger AS $$
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   INSERT INTO public.users (id, email, full_name, role, created_at, updated_at)
   VALUES (
@@ -34,7 +39,7 @@ BEGIN
   
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
 
 -- Drop existing trigger if it exists
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;

@@ -14,13 +14,18 @@ UPDATE cars SET year = 2020 WHERE year IS NULL;
 UPDATE cars SET fuel_type = 'Benzin' WHERE fuel_type IS NULL;
 
 -- Create a function to check car availability for a date range
+-- Added SET search_path = public for security
 CREATE OR REPLACE FUNCTION check_car_availability(
   p_car_id UUID,
   p_pickup_date DATE,
   p_dropoff_date DATE,
   p_exclude_booking_id UUID DEFAULT NULL
 )
-RETURNS BOOLEAN AS $$
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   conflict_count INTEGER;
 BEGIN
@@ -44,6 +49,6 @@ BEGIN
   
   RETURN conflict_count = 0;
 END;
-$$ LANGUAGE plpgsql;
+$$;
 
 COMMENT ON FUNCTION check_car_availability IS 'Prüft ob ein Fahrzeug für einen bestimmten Zeitraum verfügbar ist';
