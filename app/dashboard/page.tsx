@@ -89,9 +89,12 @@ export default function DashboardPage() {
               </div>
               <h3 className="font-semibold text-foreground mb-2">Alle Buchungen</h3>
               <p className="text-2xl font-bold text-primary">{loadingBookings ? "..." : bookings.length}</p>
-              <Link href="/dashboard/bookings" className="text-sm text-primary hover:underline mt-2 inline-block">
+              <button
+                onClick={() => (window.location.href = "/dashboard/bookings")}
+                className="text-sm text-primary hover:underline mt-2 inline-block font-medium"
+              >
                 Alle ansehen
-              </Link>
+              </button>
             </div>
 
             <div className="bg-card border border-border rounded-lg p-6">
@@ -100,9 +103,12 @@ export default function DashboardPage() {
               </div>
               <h3 className="font-semibold text-foreground mb-2">Vergangene Buchungen</h3>
               <p className="text-2xl font-bold text-primary">{loadingBookings ? "..." : pastBookings}</p>
-              <Link href="/dashboard/bookings" className="text-sm text-primary hover:underline mt-2 inline-block">
+              <button
+                onClick={() => (window.location.href = "/dashboard/bookings?filter=past")}
+                className="text-sm text-primary hover:underline mt-2 inline-block font-medium"
+              >
                 Alle ansehen
-              </Link>
+              </button>
             </div>
 
             <div className="bg-card border border-border rounded-lg p-6">
@@ -113,7 +119,10 @@ export default function DashboardPage() {
               <p className="text-2xl font-bold text-primary">
                 {loadingBookings ? "..." : `CHF ${totalSpent.toFixed(2)}`}
               </p>
-              <Link href="/dashboard/bookings" className="text-sm text-primary hover:underline mt-2 inline-block">
+              <Link
+                href="/dashboard/bookings"
+                className="text-sm text-primary hover:underline mt-2 inline-block font-medium"
+              >
                 Verwalten
               </Link>
             </div>

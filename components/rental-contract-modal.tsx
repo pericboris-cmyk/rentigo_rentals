@@ -78,7 +78,7 @@ export function RentalContractModal({ open, onOpenChange, bookingId }: RentalCon
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-2xl flex items-center gap-2">
             <FileText className="text-primary" />
@@ -86,136 +86,163 @@ export function RentalContractModal({ open, onOpenChange, bookingId }: RentalCon
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg">Kilometerstand</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="startMileage">Kilometerstand bei Übergabe *</Label>
-                <Input
-                  id="startMileage"
-                  type="number"
-                  value={formData.startMileage}
-                  onChange={(e) => setFormData({ ...formData, startMileage: e.target.value })}
-                  placeholder="50000"
-                  required
-                />
+        <div className="overflow-y-auto flex-1 pr-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Kilometer und Fahrzeug</h3>
+              <div className="bg-muted/50 rounded-lg p-4 mb-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <p className="text-muted-foreground font-medium">Fahrzeugname</p>
+                    <p className="font-semibold text-foreground">-</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground font-medium">Kennzeichen</p>
+                    <p className="font-semibold text-foreground">-</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground font-medium">Mietzeitraum</p>
+                    <p className="font-semibold text-foreground">-</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground font-medium">Abholort</p>
+                    <p className="font-semibold text-foreground">-</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground font-medium">Rückgabeort</p>
+                    <p className="font-semibold text-foreground">-</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="endMileage">Kilometerstand bei Rückgabe (optional)</Label>
-                <Input
-                  id="endMileage"
-                  type="number"
-                  value={formData.endMileage}
-                  onChange={(e) => setFormData({ ...formData, endMileage: e.target.value })}
-                  placeholder="50500"
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="startMileage">Kilometerstand bei Übergabe *</Label>
+                  <Input
+                    id="startMileage"
+                    type="number"
+                    value={formData.startMileage}
+                    onChange={(e) => setFormData({ ...formData, startMileage: e.target.value })}
+                    placeholder="50000"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="endMileage">Kilometerstand bei Rückgabe (optional)</Label>
+                  <Input
+                    id="endMileage"
+                    type="number"
+                    value={formData.endMileage}
+                    onChange={(e) => setFormData({ ...formData, endMileage: e.target.value })}
+                    placeholder="50500"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg">Übergabezeiten</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="pickupTime">Abholzeit</Label>
-                <Input
-                  id="pickupTime"
-                  type="time"
-                  value={formData.pickupTime}
-                  onChange={(e) => setFormData({ ...formData, pickupTime: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="dropoffTime">Rückgabezeit</Label>
-                <Input
-                  id="dropoffTime"
-                  type="time"
-                  value={formData.dropoffTime}
-                  onChange={(e) => setFormData({ ...formData, dropoffTime: e.target.value })}
-                />
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Übergabezeiten</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="pickupTime">Abholzeit</Label>
+                  <Input
+                    id="pickupTime"
+                    type="time"
+                    value={formData.pickupTime}
+                    onChange={(e) => setFormData({ ...formData, pickupTime: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="dropoffTime">Rückgabezeit</Label>
+                  <Input
+                    id="dropoffTime"
+                    type="time"
+                    value={formData.dropoffTime}
+                    onChange={(e) => setFormData({ ...formData, dropoffTime: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg">Mieter-Adresse</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="lesseeAddress">Strasse und Hausnummer</Label>
-                <Input
-                  id="lesseeAddress"
-                  value={formData.lesseeAddress}
-                  onChange={(e) => setFormData({ ...formData, lesseeAddress: e.target.value })}
-                  placeholder="Musterstrasse 123"
-                />
-              </div>
-              <div>
-                <Label htmlFor="lesseeCity">PLZ und Ort</Label>
-                <Input
-                  id="lesseeCity"
-                  value={formData.lesseeCity}
-                  onChange={(e) => setFormData({ ...formData, lesseeCity: e.target.value })}
-                  placeholder="8001 Zürich"
-                />
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Mieter-Adresse</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="lesseeAddress">Strasse und Hausnummer</Label>
+                  <Input
+                    id="lesseeAddress"
+                    value={formData.lesseeAddress}
+                    onChange={(e) => setFormData({ ...formData, lesseeAddress: e.target.value })}
+                    placeholder="Musterstrasse 123"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lesseeCity">PLZ und Ort</Label>
+                  <Input
+                    id="lesseeCity"
+                    value={formData.lesseeCity}
+                    onChange={(e) => setFormData({ ...formData, lesseeCity: e.target.value })}
+                    placeholder="8001 Zürich"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="space-y-4">
-            <h3 className="font-semibold text-lg">Mietbedingungen</h3>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="deposit">Kaution (CHF)</Label>
-                <Input
-                  id="deposit"
-                  type="number"
-                  step="0.01"
-                  value={formData.deposit}
-                  onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="includedKm">Inkl. km pro Tag</Label>
-                <Input
-                  id="includedKm"
-                  type="number"
-                  value={formData.includedKm}
-                  onChange={(e) => setFormData({ ...formData, includedKm: e.target.value })}
-                />
-              </div>
-              <div>
-                <Label htmlFor="extraKmPrice">Preis pro Extra-km (CHF)</Label>
-                <Input
-                  id="extraKmPrice"
-                  type="number"
-                  step="0.01"
-                  value={formData.extraKmPrice}
-                  onChange={(e) => setFormData({ ...formData, extraKmPrice: e.target.value })}
-                />
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Mietbedingungen</h3>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="deposit">Kaution (CHF)</Label>
+                  <Input
+                    id="deposit"
+                    type="number"
+                    step="0.01"
+                    value={formData.deposit}
+                    onChange={(e) => setFormData({ ...formData, deposit: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="includedKm">Inkl. km pro Tag</Label>
+                  <Input
+                    id="includedKm"
+                    type="number"
+                    value={formData.includedKm}
+                    onChange={(e) => setFormData({ ...formData, includedKm: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="extraKmPrice">Preis pro Extra-km (CHF)</Label>
+                  <Input
+                    id="extraKmPrice"
+                    type="number"
+                    step="0.01"
+                    value={formData.extraKmPrice}
+                    onChange={(e) => setFormData({ ...formData, extraKmPrice: e.target.value })}
+                  />
+                </div>
               </div>
             </div>
-          </div>
+          </form>
+        </div>
 
-          <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
-              Abbrechen
-            </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              {loading ? (
-                <>
-                  <Loader2 className="animate-spin mr-2" size={18} />
-                  Wird generiert...
-                </>
-              ) : (
-                <>
-                  <FileText className="mr-2" size={18} />
-                  Mietvertrag erstellen
-                </>
-              )}
-            </Button>
-          </div>
-        </form>
+        <div className="border-t border-border pt-4 mt-4 flex gap-3">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
+            Abbrechen
+          </Button>
+          <Button type="submit" disabled={loading} className="flex-1">
+            {loading ? (
+              <>
+                <Loader2 className="animate-spin mr-2" size={18} />
+                Wird generiert...
+              </>
+            ) : (
+              <>
+                <FileText className="mr-2" size={18} />
+                Mietvertrag erstellen
+              </>
+            )}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   )

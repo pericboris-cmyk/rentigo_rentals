@@ -282,6 +282,12 @@ export default function AdminDashboardPage() {
                   </div>
                   <h3 className="font-semibold text-foreground mb-2">Alle Buchungen</h3>
                   <p className="text-2xl font-bold text-primary">{stats.totalBookings}</p>
+                  <button
+                    onClick={() => (window.location.href = "/admin/bookings")}
+                    className="text-sm text-primary hover:underline mt-2 inline-block font-medium"
+                  >
+                    Alle ansehen →
+                  </button>
                 </div>
 
                 <div className="bg-card border border-border rounded-lg p-6">
@@ -290,6 +296,12 @@ export default function AdminDashboardPage() {
                   </div>
                   <h3 className="font-semibold text-foreground mb-2">Bestätigt</h3>
                   <p className="text-2xl font-bold text-green-600">{stats.confirmedBookings}</p>
+                  <button
+                    onClick={() => (window.location.href = "/admin/bookings?status=confirmed")}
+                    className="text-sm text-green-600 hover:underline mt-2 inline-block font-medium"
+                  >
+                    Ansehen →
+                  </button>
                 </div>
 
                 <div className="bg-card border border-border rounded-lg p-6">

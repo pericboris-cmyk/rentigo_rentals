@@ -20,11 +20,11 @@ export default function Footer() {
             <div>
               <div className="mb-4 h-10 flex items-center">
                 <Image
-                  src="/images/549916570-17847038667563613-3680059545850272019-n.jpg"
+                  src="/rentigo-logo.jpg"
                   alt="Rentigo Rentals"
-                  width={120}
-                  height={40}
-                  className="brightness-0 invert object-contain"
+                  width={140}
+                  height={50}
+                  className="brightness-0 invert object-contain h-10 w-auto"
                   priority
                 />
               </div>
