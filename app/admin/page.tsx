@@ -5,7 +5,7 @@ import { redirect } from "next/navigation"
 import { useEffect, useState } from "react"
 import Header from "@/components/header"
 import Footer from "@/components/footer"
-import { Calendar, Users, DollarSign, CheckCircle, Construction, Power, Receipt, Sparkles } from "lucide-react"
+import { Calendar, Users, DollarSign, CheckCircle, Construction, Power, Receipt } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
 
@@ -190,43 +190,26 @@ export default function AdminDashboardPage() {
 
       <section className="py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8 flex items-center justify-between">
+          <div className="mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Admin Dashboard</h1>
               <p className="text-muted-foreground">Verwalten Sie Buchungen, Benutzer und Einstellungen</p>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <button
-                onClick={toggleChristmasPromo}
-                disabled={loadingPromo}
-                className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition ${
-                  christmasPromoActive
-                    ? "bg-red-600 hover:bg-red-700 text-white"
-                    : "bg-green-600 hover:bg-green-700 text-white"
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                <Sparkles size={16} className="sm:hidden" />
-                <Sparkles size={20} className="hidden sm:block" />
-                <span className="hidden sm:inline">{christmasPromoActive ? "Aktion beenden" : "Aktion starten"}</span>
-                <span className="sm:hidden">{christmasPromoActive ? "Beenden" : "Starten"}</span>
-              </button>
-
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <button
                 onClick={sendTestPayment}
                 disabled={sendingTestPayment}
-                className="flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm sm:text-base transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm sm:text-base transition disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
               >
-                <Receipt size={16} className="sm:hidden" />
-                <Receipt size={20} className="hidden sm:block" />
-                <span className="hidden sm:inline">Testrechnung (CHF 1.00)</span>
-                <span className="sm:hidden">Test</span>
+                <Receipt size={20} />
+                <span>Testrechnung (CHF 1.00)</span>
               </button>
 
               <button
                 onClick={toggleMaintenanceMode}
                 disabled={loadingMaintenance}
-                className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold text-sm sm:text-base transition ${
+                className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-3 rounded-lg font-semibold text-sm sm:text-base transition min-h-[44px] ${
                   maintenanceMode
                     ? "bg-green-600 hover:bg-green-700 text-white"
                     : "bg-yellow-600 hover:bg-yellow-700 text-white"
@@ -234,31 +217,18 @@ export default function AdminDashboardPage() {
               >
                 {maintenanceMode ? (
                   <>
-                    <Power size={16} className="sm:hidden" />
-                    <Power size={20} className="hidden sm:block" />
-                    <span className="hidden sm:inline">Website aktivieren</span>
-                    <span className="sm:hidden">An</span>
+                    <Power size={20} />
+                    <span>Website aktivieren</span>
                   </>
                 ) : (
                   <>
-                    <Construction size={16} className="sm:hidden" />
-                    <Construction size={20} className="hidden sm:block" />
-                    <span className="hidden sm:inline">In Wartung setzen</span>
-                    <span className="sm:hidden">Wartung</span>
+                    <Construction size={20} />
+                    <span>In Wartung setzen</span>
                   </>
                 )}
               </button>
             </div>
           </div>
-
-          {christmasPromoActive && (
-            <div className="bg-green-500/10 border border-green-500/50 rounded-lg p-4 mb-6">
-              <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                <Sparkles size={20} />
-                <p className="font-semibold">Weihnachtsaktion ist aktiv - Wird auf der Homepage angezeigt 🎄</p>
-              </div>
-            </div>
-          )}
 
           {maintenanceMode && (
             <div className="bg-yellow-500/10 border border-yellow-500/50 rounded-lg p-4 mb-6">

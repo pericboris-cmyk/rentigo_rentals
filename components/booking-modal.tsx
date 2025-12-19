@@ -673,7 +673,7 @@ export default function BookingModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[90vw] md:max-w-[1100px] lg:max-w-[1200px] max-h-[90vh] sm:max-h-[85vh] p-4 sm:p-6 md:p-10 rounded-xl sm:rounded-2xl overflow-auto">
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[90vw] md:max-w-[1100px] lg:max-w-[1200px] max-h-[90vh] sm:max-h-[85vh] p-4 sm:p-6 md:p-10 rounded-xl sm:rounded-2xl overflow-visible">
         <DialogTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
           Fahrzeug buchen
         </DialogTitle>
@@ -769,7 +769,7 @@ export default function BookingModal({
                       <CalendarIcon className="w-4 h-4 text-primary" />
                       Abholdatum
                     </Label>
-                    <Popover>
+                    <Popover modal={true}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -786,7 +786,7 @@ export default function BookingModal({
                           )}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="bottom" sideOffset={8}>
                         <Calendar
                           mode="single"
                           selected={formData.pickupDate ? new Date(formData.pickupDate + "T12:00:00") : undefined}
@@ -798,7 +798,6 @@ export default function BookingModal({
                                   pickupDate: newPickupDate,
                                 }
 
-                                // FIX: Fix date comparison - compare as Date objects consistently
                                 if (prev.returnDate) {
                                   const returnDate = new Date(prev.returnDate + "T12:00:00")
                                   if (returnDate < date) {
@@ -886,7 +885,7 @@ export default function BookingModal({
                       <CalendarIcon className="w-4 h-4 text-primary" />
                       Rückgabedatum
                     </Label>
-                    <Popover>
+                    <Popover modal={true}>
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -902,7 +901,7 @@ export default function BookingModal({
                             : "Rückgabedatum wählen"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="bottom" sideOffset={8}>
                         <Calendar
                           mode="single"
                           selected={formData.returnDate ? new Date(formData.returnDate + "T12:00:00") : undefined}
@@ -1354,7 +1353,7 @@ export default function BookingModal({
                   </p>
                 </div>
 
-                <div className="space-y-3 sm:space-y-4">
+                <div className="space-y-3 sm:space-4">
                   <div className="border border-primary/20 rounded-xl p-5 bg-gradient-to-br from-primary/5 to-primary/10 shadow-sm">
                     <h3 className="font-bold text-lg text-foreground mb-4 flex items-center gap-2">
                       <User size={20} className="text-primary" />

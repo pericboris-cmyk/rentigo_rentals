@@ -212,12 +212,12 @@ export default function AdminBookingsPage() {
                         Erstellt: {new Date(booking.created_at).toLocaleDateString("de-DE")}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <select
                         value={booking.status}
                         onChange={(e) => handleStatusChange(booking.id, booking.status, e.target.value)}
                         disabled={updatingId === booking.id || deletingId === booking.id}
-                        className="px-3 py-2 bg-input border border-border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="px-3 py-2 bg-input border border-border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary min-w-[120px]"
                       >
                         <option value="confirmed">Bestätigt</option>
                         <option value="completed">Abgeschlossen</option>
@@ -231,7 +231,7 @@ export default function AdminBookingsPage() {
                           updatingId === booking.id ||
                           deletingId === booking.id
                         }
-                        className="p-2 bg-green-500/10 text-green-600 hover:bg-green-500/20 rounded-lg transition-colors disabled:opacity-50"
+                        className="p-2 sm:p-3 bg-green-500/10 text-green-600 hover:bg-green-500/20 rounded-lg transition-colors disabled:opacity-50 min-w-[40px] min-h-[40px] flex items-center justify-center"
                         title="Bezahlbestätigung senden"
                       >
                         {sendingPaymentConfirmation === booking.id ? (
@@ -243,7 +243,7 @@ export default function AdminBookingsPage() {
                       <button
                         onClick={() => openDeleteDialog(booking.id)}
                         disabled={updatingId === booking.id || deletingId === booking.id}
-                        className="p-2 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-lg transition-colors disabled:opacity-50"
+                        className="p-2 sm:p-3 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-lg transition-colors disabled:opacity-50 min-w-[40px] min-h-[40px] flex items-center justify-center"
                         title="Buchung löschen"
                       >
                         {deletingId === booking.id ? (
