@@ -106,6 +106,7 @@ interface BookingModalProps {
   initialDropoffDate?: string
 }
 
+// Helper for icons
 function getIconComponent(iconName: string) {
   const icons: Record<string, any> = {
     Users,
@@ -130,6 +131,7 @@ export default function BookingModal({
   const { user } = useAuth()
   const [step, setStep] = useState(1)
   const [showVehicles, setShowVehicles] = useState(false)
+
   const [formData, setFormData] = useState({
     pickupDate: initialPickupDate || "",
     pickupTime: "10:00",
@@ -181,6 +183,20 @@ export default function BookingModal({
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
   const [bookingComplete, setBookingComplete] = useState(false)
   const [bookingId, setBookingId] = useState("")
+
+  // Popover open state + month state, damit Rückgabe-Kalender im Monat des Abholdatums startet
+  const [pickupOpen, setPickupOpen] = useState(false)
+  const [returnOpen, setReturnOpen] = useState(false)
+
+  const [pickupCalendarMonth, setPickupCalendarMonth] = useState<Date | undefined>(() => {
+    if (initialPickupDate) return new Date(initialPickupDate + "T12:00:00")
+    return getEarliestPickupDate()
+  })
+
+  const [returnCalendarMonth, setReturnCalendarMonth] = useState<Date | undefined>(() => {
+    if (initialPickupDate) return new Date(initialPickupDate + "T12:00:00")
+    return new Date()
+  })
 
   useEffect(() => {
     if (isOpen && !user) {
@@ -597,6 +613,9 @@ export default function BookingModal({
     setShowVehicles(false)
     setCars([])
     setStep(1)
+    setPickupOpen(false)
+    setReturnOpen(false)
+
     setFormData({
       pickupDate: "",
       pickupTime: "10:00",
@@ -620,6 +639,7 @@ export default function BookingModal({
         },
       },
     })
+
     setDriverData({
       driver1: {
         firstName: "",
@@ -634,9 +654,12 @@ export default function BookingModal({
         licenseIssueDate: "",
       },
     })
+
     setSelectedExtras([])
     setValidationErrors([])
     setError("")
+    setPickupCalendarMonth(getEarliestPickupDate())
+    setReturnCalendarMonth(new Date())
     onClose()
   }
 
@@ -772,38 +795,52 @@ export default function BookingModal({
                       <CalendarIcon className="w-4 h-4 text-primary" />
                       Abholdatum
                     </Label>
-                    <Popover modal={true}>
+
+                    <Popover
+                      modal={true}
+                      open={pickupOpen}
+                      onOpenChange={(open) => {
+                        setPickupOpen(open)
+                        if (open) {
+                          setPickupCalendarMonth(
+                            formData.pickupDate ? new Date(formData.pickupDate + "T12:00:00") : getEarliestPickupDate(),
+                          )
+                        }
+                      }}
+                    >
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full h-11 px-4 bg-transparent text-left font-normal",
+                            "w-full h-11 px-4 bg-transparent justify-start text-left font-normal",
                             !formData.pickupDate && "text-muted-foreground",
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {formData.pickupDate ? (
-                            format(new Date(formData.pickupDate + "T12:00:00"), "PPP", { locale: de })
+                            format(new Date(formData.pickupDate + "T12:00:00"), "dd.MM.yyyy", { locale: de })
                           ) : (
                             <span>Datum wählen</span>
                           )}
                         </Button>
                       </PopoverTrigger>
+
                       <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="bottom" sideOffset={8}>
                         <Calendar
                           mode="single"
+                          month={pickupCalendarMonth}
+                          onMonthChange={setPickupCalendarMonth}
                           selected={formData.pickupDate ? new Date(formData.pickupDate + "T12:00:00") : undefined}
                           onSelect={(date) => {
                             if (date) {
                               const newPickupDate = formatDateForDB(date)
+
                               setFormData((prev) => {
-                                const updates: any = {
-                                  pickupDate: newPickupDate,
-                                }
+                                const updates: any = { pickupDate: newPickupDate }
 
                                 if (prev.returnDate) {
-                                  const returnDate = new Date(prev.returnDate + "T12:00:00")
-                                  if (returnDate < date) {
+                                  const returnDateObj = new Date(prev.returnDate + "T12:00:00")
+                                  if (returnDateObj < date) {
                                     updates.returnDate = ""
                                     toast({
                                       title: "Rückgabedatum aktualisiert",
@@ -820,6 +857,9 @@ export default function BookingModal({
 
                                 return { ...prev, ...updates }
                               })
+
+                              // Rückgabe-Kalender soll im selben Monat wie Abholdatum starten
+                              setReturnCalendarMonth(new Date(newPickupDate + "T12:00:00"))
                             }
                           }}
                           initialFocus
@@ -889,7 +929,19 @@ export default function BookingModal({
                       Rückgabedatum
                     </Label>
 
-                    <Popover modal={true}>
+                    <Popover
+                      modal={true}
+                      open={returnOpen}
+                      onOpenChange={(open) => {
+                        setReturnOpen(open)
+                        if (open) {
+                          // Öffnet im Monat des Abholdatums (oder heute, falls noch kein Abholdatum)
+                          setReturnCalendarMonth(
+                            formData.pickupDate ? new Date(formData.pickupDate + "T12:00:00") : new Date(),
+                          )
+                        }
+                      }}
+                    >
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
@@ -899,10 +951,9 @@ export default function BookingModal({
                           )}
                           disabled={!formData.pickupDate}
                         >
-                          {/* FIX: hier muss das Icon rein, nicht der Calendar Datepicker */}
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {formData.returnDate
-                            ? format(new Date(formData.returnDate + "T12:00:00"), "dd.MM.yyyy")
+                            ? format(new Date(formData.returnDate + "T12:00:00"), "dd.MM.yyyy", { locale: de })
                             : "Rückgabedatum wählen"}
                         </Button>
                       </PopoverTrigger>
@@ -910,6 +961,8 @@ export default function BookingModal({
                       <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="bottom" sideOffset={8}>
                         <Calendar
                           mode="single"
+                          month={returnCalendarMonth}
+                          onMonthChange={setReturnCalendarMonth}
                           selected={formData.returnDate ? new Date(formData.returnDate + "T12:00:00") : undefined}
                           onSelect={(date) => {
                             if (date) {
@@ -1086,10 +1139,6 @@ export default function BookingModal({
                 )}
               </div>
             )}
-
-            {/* ab hier ist dein Code unverändert weitergelaufen */}
-            {/* Schritt 2, 3, 4 und Footer Buttons sind identisch zu deinem Original */}
-            {/* Ich lasse sie exakt so drin wie du sie geschickt hast, weil der Bug nur im Rückgabedatum Button war */}
 
             {step === 2 && (
               <div className="space-y-4 sm:space-y-6">
