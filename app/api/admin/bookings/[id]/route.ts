@@ -1,6 +1,14 @@
+import { createClient } from "@supabase/supabase-js"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { type NextRequest, NextResponse } from "next/server"
+
+const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+})
 
 export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
@@ -32,7 +40,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
       return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
     }
 
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await supabaseAdmin
       .from("users")
       .select("role")
       .eq("id", session.user.id)
@@ -54,14 +62,12 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
     console.log("[v0] Updating booking status from", oldStatus, "to", newStatus)
 
-    const { data: bookingBefore, error: fetchError } = await supabase
+    const { data: bookingBefore, error: fetchError } = await supabaseAdmin
       .from("bookings")
       .select(
         `
         *,
-        car:cars(name, model),
-        pickup_location:locations!bookings_pickup_location_id_fkey(name, city),
-        dropoff_location:locations!bookings_dropoff_location_id_fkey(name, city)
+        car:cars(name, model)
       `,
       )
       .eq("id", id)
@@ -74,7 +80,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
 
     console.log("[v0] Booking data fetched:", bookingBefore.id)
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("bookings")
       .update({
         status: newStatus,
@@ -89,8 +95,6 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     }
 
     console.log("[v0] Booking status updated successfully")
-
-    // Admins can manually send emails using the payment confirmation button if needed
 
     return NextResponse.json({ booking: data[0], message: "Buchung erfolgreich aktualisiert" })
   } catch (error) {
@@ -129,7 +133,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
       return NextResponse.json({ error: "Nicht authentifiziert" }, { status: 401 })
     }
 
-    const { data: user, error: userError } = await supabase
+    const { data: user, error: userError } = await supabaseAdmin
       .from("users")
       .select("role")
       .eq("id", session.user.id)
@@ -145,16 +149,14 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ id: 
       return NextResponse.json({ error: "Keine Admin-Berechtigung" }, { status: 403 })
     }
 
-    // Delete related reviews first if they exist
-    const { error: reviewsError } = await supabase.from("reviews").delete().eq("booking_id", id)
+    const { error: reviewsError } = await supabaseAdmin.from("reviews").delete().eq("booking_id", id)
 
     if (reviewsError) {
       console.error("[v0] Error deleting reviews:", reviewsError)
       // Continue even if no reviews exist
     }
 
-    // Delete the booking
-    const { error: deleteError } = await supabase.from("bookings").delete().eq("id", id)
+    const { error: deleteError } = await supabaseAdmin.from("bookings").delete().eq("id", id)
 
     if (deleteError) {
       console.error("[v0] Error deleting booking:", deleteError)
