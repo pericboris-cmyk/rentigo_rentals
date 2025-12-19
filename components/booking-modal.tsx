@@ -673,7 +673,7 @@ export default function BookingModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-[95vw] sm:max-w-4xl max-h-[95vh] flex flex-col p-0 gap-0 overflow-visible">
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[90vw] md:max-w-[1100px] lg:max-w-[1200px] max-h-[90vh] sm:max-h-[85vh] p-4 sm:p-6 md:p-10 rounded-xl sm:rounded-2xl overflow-visible">
         <DialogTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
           Fahrzeug buchen
         </DialogTitle>
@@ -880,7 +880,7 @@ export default function BookingModal({
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6">
-                  <div className="space-y-2">
+                  <div className="space-y-2 sm:space-y-3">
                     <Label htmlFor="returnDate" className="flex items-center gap-2 font-medium text-sm sm:text-base">
                       <CalendarIcon className="w-4 h-4 text-primary" />
                       Rückgabedatum
@@ -890,27 +890,18 @@ export default function BookingModal({
                         <Button
                           variant="outline"
                           className={cn(
-                            "w-full h-11 px-4 justify-start text-left font-normal",
+                            "w-full justify-start text-left font-normal",
                             !formData.returnDate && "text-muted-foreground",
                           )}
                           disabled={!formData.pickupDate}
                         >
                           <Calendar className="mr-2 h-4 w-4" />
                           {formData.returnDate
-                            ? format(new Date(formData.returnDate + "T12:00:00"), "PPP", { locale: de })
-                            : !formData.pickupDate
-                              ? "Erst Abholdatum wählen"
-                              : "Rückgabedatum wählen"}
+                            ? format(new Date(formData.returnDate + "T12:00:00"), "dd.MM.yyyy")
+                            : "Rückgabedatum wählen"}
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent
-                        className="w-auto p-0 z-[9999]"
-                        align="start"
-                        side="bottom"
-                        sideOffset={8}
-                        avoidCollisions={true}
-                        collisionPadding={10}
-                      >
+                      <PopoverContent className="w-auto p-0 z-[9999]" align="start" side="bottom" sideOffset={8}>
                         <Calendar
                           mode="single"
                           selected={formData.returnDate ? new Date(formData.returnDate + "T12:00:00") : undefined}
@@ -924,25 +915,17 @@ export default function BookingModal({
                           }}
                           initialFocus
                           locale={de}
-                          defaultMonth={formData.pickupDate ? new Date(formData.pickupDate + "T12:00:00") : undefined}
-                          fromDate={formData.pickupDate ? new Date(formData.pickupDate + "T12:00:00") : undefined}
+                          fromDate={formData.pickupDate ? new Date(formData.pickupDate + "T12:00:00") : new Date()}
                           disabled={(date) => {
-                            // If no pickup date, disable everything
-                            if (!formData.pickupDate) {
-                              return true
+                            if (formData.pickupDate) {
+                              const pickupDate = new Date(formData.pickupDate)
+                              pickupDate.setHours(0, 0, 0, 0)
+                              const comparisonDate = new Date(date)
+                              comparisonDate.setHours(0, 0, 0, 0)
+                              if (comparisonDate < pickupDate) {
+                                return true
+                              }
                             }
-
-                            // Disable dates before pickup date
-                            const pickupDate = new Date(formData.pickupDate + "T00:00:00")
-                            const checkDate = new Date(date)
-                            checkDate.setHours(0, 0, 0, 0)
-                            pickupDate.setHours(0, 0, 0, 0)
-
-                            if (checkDate < pickupDate) {
-                              return true
-                            }
-
-                            // Also apply general booking restrictions
                             return isDateDisabledForBooking(date)
                           }}
                         />
