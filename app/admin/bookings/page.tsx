@@ -199,107 +199,111 @@ export default function AdminBookingsPage() {
               <p className="text-muted-foreground">Keine Buchungen vorhanden</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {bookings.map((booking) => (
-                <div key={booking.id} className="bg-card border border-border rounded-lg p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="font-semibold text-foreground text-lg">
-                        {booking.first_name} {booking.last_name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">Buchung #{booking.id.slice(0, 8).toUpperCase()}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Erstellt: {new Date(booking.created_at).toLocaleDateString("de-DE")}
+            <div className="max-h-[calc(100vh-400px)] overflow-y-auto pr-2">
+              <div className="space-y-4">
+                {bookings.map((booking) => (
+                  <div key={booking.id} className="bg-card border border-border rounded-lg p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="font-semibold text-foreground text-lg">
+                          {booking.first_name} {booking.last_name}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">Buchung #{booking.id.slice(0, 8).toUpperCase()}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Erstellt: {new Date(booking.created_at).toLocaleDateString("de-DE")}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <select
+                          value={booking.status}
+                          onChange={(e) => handleStatusChange(booking.id, booking.status, e.target.value)}
+                          disabled={updatingId === booking.id || deletingId === booking.id}
+                          className="px-3 py-2 bg-input border border-border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary min-w-[120px]"
+                        >
+                          <option value="confirmed">Bestätigt</option>
+                          <option value="completed">Abgeschlossen</option>
+                          <option value="cancelled">Storniert</option>
+                        </select>
+                        {updatingId === booking.id && <Loader2 className="animate-spin text-primary" size={20} />}
+                        <button
+                          onClick={() => handleSendPaymentConfirmation(booking.id)}
+                          disabled={
+                            sendingPaymentConfirmation === booking.id ||
+                            updatingId === booking.id ||
+                            deletingId === booking.id
+                          }
+                          className="p-2 sm:p-3 bg-green-500/10 text-green-600 hover:bg-green-500/20 rounded-lg transition-colors disabled:opacity-50 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                          title="Bezahlbestätigung senden"
+                        >
+                          {sendingPaymentConfirmation === booking.id ? (
+                            <Loader2 className="animate-spin" size={20} />
+                          ) : (
+                            <Mail size={20} />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => openDeleteDialog(booking.id)}
+                          disabled={updatingId === booking.id || deletingId === booking.id}
+                          className="p-2 sm:p-3 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-lg transition-colors disabled:opacity-50 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                          title="Buchung löschen"
+                        >
+                          {deletingId === booking.id ? (
+                            <Loader2 className="animate-spin" size={20} />
+                          ) : (
+                            <Trash2 size={20} />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                      <div className="flex items-start gap-2">
+                        <User size={18} className="text-primary mt-1" />
+                        <div className="text-sm">
+                          <p className="text-muted-foreground">Kontakt</p>
+                          <p className="text-foreground">{booking.email}</p>
+                          <p className="text-foreground">{booking.phone}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <Car size={18} className="text-primary mt-1" />
+                        <div className="text-sm">
+                          <p className="text-muted-foreground">Fahrzeug</p>
+                          <p className="text-foreground font-medium">{booking.car?.name || "Nicht verfügbar"}</p>
+                          <p className="text-foreground">{booking.car?.year || "-"}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <MapPin size={18} className="text-primary mt-1" />
+                        <div className="text-sm">
+                          <p className="text-muted-foreground">Standorte</p>
+                          <p className="text-foreground">Abholung: {booking.pickup_address || "Nicht verfügbar"}</p>
+                          <p className="text-foreground">Rückgabe: {booking.dropoff_address || "Nicht verfügbar"}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-2">
+                        <Calendar size={18} className="text-primary mt-1" />
+                        <div className="text-sm">
+                          <p className="text-muted-foreground">Zeitraum</p>
+                          <p className="text-foreground">{new Date(booking.pickup_date).toLocaleDateString("de-DE")}</p>
+                          <p className="text-foreground">
+                            {new Date(booking.dropoff_date).toLocaleDateString("de-DE")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-border">
+                      <p className="text-lg font-semibold text-primary">
+                        Gesamtpreis: CHF {booking.total_price.toFixed(2)}
                       </p>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <select
-                        value={booking.status}
-                        onChange={(e) => handleStatusChange(booking.id, booking.status, e.target.value)}
-                        disabled={updatingId === booking.id || deletingId === booking.id}
-                        className="px-3 py-2 bg-input border border-border rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary min-w-[120px]"
-                      >
-                        <option value="confirmed">Bestätigt</option>
-                        <option value="completed">Abgeschlossen</option>
-                        <option value="cancelled">Storniert</option>
-                      </select>
-                      {updatingId === booking.id && <Loader2 className="animate-spin text-primary" size={20} />}
-                      <button
-                        onClick={() => handleSendPaymentConfirmation(booking.id)}
-                        disabled={
-                          sendingPaymentConfirmation === booking.id ||
-                          updatingId === booking.id ||
-                          deletingId === booking.id
-                        }
-                        className="p-2 sm:p-3 bg-green-500/10 text-green-600 hover:bg-green-500/20 rounded-lg transition-colors disabled:opacity-50 min-w-[40px] min-h-[40px] flex items-center justify-center"
-                        title="Bezahlbestätigung senden"
-                      >
-                        {sendingPaymentConfirmation === booking.id ? (
-                          <Loader2 className="animate-spin" size={20} />
-                        ) : (
-                          <Mail size={20} />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => openDeleteDialog(booking.id)}
-                        disabled={updatingId === booking.id || deletingId === booking.id}
-                        className="p-2 sm:p-3 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-lg transition-colors disabled:opacity-50 min-w-[40px] min-h-[40px] flex items-center justify-center"
-                        title="Buchung löschen"
-                      >
-                        {deletingId === booking.id ? (
-                          <Loader2 className="animate-spin" size={20} />
-                        ) : (
-                          <Trash2 size={20} />
-                        )}
-                      </button>
-                    </div>
                   </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    <div className="flex items-start gap-2">
-                      <User size={18} className="text-primary mt-1" />
-                      <div className="text-sm">
-                        <p className="text-muted-foreground">Kontakt</p>
-                        <p className="text-foreground">{booking.email}</p>
-                        <p className="text-foreground">{booking.phone}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <Car size={18} className="text-primary mt-1" />
-                      <div className="text-sm">
-                        <p className="text-muted-foreground">Fahrzeug</p>
-                        <p className="text-foreground font-medium">{booking.car?.name || "Nicht verfügbar"}</p>
-                        <p className="text-foreground">{booking.car?.year || "-"}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <MapPin size={18} className="text-primary mt-1" />
-                      <div className="text-sm">
-                        <p className="text-muted-foreground">Standorte</p>
-                        <p className="text-foreground">Abholung: {booking.pickup_address || "Nicht verfügbar"}</p>
-                        <p className="text-foreground">Rückgabe: {booking.dropoff_address || "Nicht verfügbar"}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-2">
-                      <Calendar size={18} className="text-primary mt-1" />
-                      <div className="text-sm">
-                        <p className="text-muted-foreground">Zeitraum</p>
-                        <p className="text-foreground">{new Date(booking.pickup_date).toLocaleDateString("de-DE")}</p>
-                        <p className="text-foreground">{new Date(booking.dropoff_date).toLocaleDateString("de-DE")}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-border">
-                    <p className="text-lg font-semibold text-primary">
-                      Gesamtpreis: CHF {booking.total_price.toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>

@@ -64,63 +64,65 @@ export default function BookingsList() {
 
   return (
     <>
-      <div className="space-y-4">
-        {bookings.map((booking) => (
-          <div
-            key={booking.id}
-            onClick={() => setSelectedBookingId(booking.id)}
-            className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 transition cursor-pointer"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="font-semibold text-foreground">Buchung #{booking.id.slice(0, 8).toUpperCase()}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {new Date(booking.created_at).toLocaleDateString("de-DE")}
-                </p>
-              </div>
-              <div
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  booking.status === "confirmed"
-                    ? "bg-green-100 text-green-800"
-                    : booking.status === "cancelled"
-                      ? "bg-red-100 text-red-800"
-                      : "bg-blue-100 text-blue-800"
-                }`}
-              >
-                {booking.status === "confirmed"
-                  ? "Bestätigt"
-                  : booking.status === "cancelled"
-                    ? "Storniert"
-                    : "Abgeschlossen"}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center gap-2">
-                <Calendar size={18} className="text-primary" />
-                <div className="text-sm">
-                  <p className="text-muted-foreground">Zeitraum</p>
-                  <p className="text-foreground font-medium">
-                    {new Date(booking.pickup_date).toLocaleDateString("de-DE")} -{" "}
-                    {new Date(booking.dropoff_date).toLocaleDateString("de-DE")}
+      <div className="max-h-[calc(100vh-500px)] overflow-y-auto pr-2">
+        <div className="space-y-4">
+          {bookings.map((booking) => (
+            <div
+              key={booking.id}
+              onClick={() => setSelectedBookingId(booking.id)}
+              className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 transition cursor-pointer"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h3 className="font-semibold text-foreground">Buchung #{booking.id.slice(0, 8).toUpperCase()}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date(booking.created_at).toLocaleDateString("de-DE")}
                   </p>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <DollarSign size={18} className="text-primary" />
-                <div className="text-sm">
-                  <p className="text-muted-foreground">Gesamtpreis</p>
-                  <p className="text-foreground font-medium">CHF {booking.total_price.toFixed(2)}</p>
+                <div
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    booking.status === "confirmed"
+                      ? "bg-green-100 text-green-800"
+                      : booking.status === "cancelled"
+                        ? "bg-red-100 text-red-800"
+                        : "bg-blue-100 text-blue-800"
+                  }`}
+                >
+                  {booking.status === "confirmed"
+                    ? "Bestätigt"
+                    : booking.status === "cancelled"
+                      ? "Storniert"
+                      : "Abgeschlossen"}
                 </div>
               </div>
 
-              <div className="flex items-center justify-end">
-                <span className="text-sm text-primary font-medium">Details anzeigen →</span>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-2">
+                  <Calendar size={18} className="text-primary" />
+                  <div className="text-sm">
+                    <p className="text-muted-foreground">Zeitraum</p>
+                    <p className="text-foreground font-medium">
+                      {new Date(booking.pickup_date).toLocaleDateString("de-DE")} -{" "}
+                      {new Date(booking.dropoff_date).toLocaleDateString("de-DE")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <DollarSign size={18} className="text-primary" />
+                  <div className="text-sm">
+                    <p className="text-muted-foreground">Gesamtpreis</p>
+                    <p className="text-foreground font-medium">CHF {booking.total_price.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end">
+                  <span className="text-sm text-primary font-medium">Details anzeigen →</span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {selectedBookingId && (
