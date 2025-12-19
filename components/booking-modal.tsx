@@ -145,7 +145,7 @@ export default function BookingModal({
     firstName: user?.full_name?.split(" ")[0] || "",
     lastName: user?.full_name?.split(" ").slice(1).join(" ") || "",
     email: user?.email || "",
-    phone: "",
+    phone: user?.phone || "",
     totalPrice: 0,
     extras: {
       services: [] as string[],
@@ -205,6 +205,30 @@ export default function BookingModal({
       onClose()
     }
   }, [isOpen, user, router, onClose, preselectedCarId])
+
+  useEffect(() => {
+    if (user && isOpen) {
+      const firstName = user.full_name?.split(" ")[0] || ""
+      const lastName = user.full_name?.split(" ").slice(1).join(" ") || ""
+
+      setFormData((prev) => ({
+        ...prev,
+        firstName,
+        lastName,
+        email: user.email || "",
+        phone: user.phone || "",
+      }))
+
+      setDriverData((prev) => ({
+        ...prev,
+        driver1: {
+          ...prev.driver1,
+          firstName,
+          lastName,
+        },
+      }))
+    }
+  }, [user, isOpen])
 
   const defaultExtras: ExtraService[] = [
     {
@@ -747,7 +771,12 @@ export default function BookingModal({
                       >
                         {item.num}
                       </div>
-                      <span className={cn("text-sm font-medium transition-colors", isDoneOrActive ? "text-foreground" : "text-muted-foreground")}>
+                      <span
+                        className={cn(
+                          "text-sm font-medium transition-colors",
+                          isDoneOrActive ? "text-foreground" : "text-muted-foreground",
+                        )}
+                      >
                         {item.label}
                       </span>
                     </div>
@@ -1019,7 +1048,10 @@ export default function BookingModal({
                   </div>
 
                   <div className="space-y-2 sm:space-y-3">
-                    <Label htmlFor="dropoffAddress" className="flex items-center gap-2 font-medium text-sm sm:text-base">
+                    <Label
+                      htmlFor="dropoffAddress"
+                      className="flex items-center gap-2 font-medium text-sm sm:text-base"
+                    >
                       <MapPin className="w-4 h-4 text-primary" />
                       Rückgabestandort *
                     </Label>
@@ -1075,7 +1107,9 @@ export default function BookingModal({
                               key={car.id}
                               onClick={() => setFormData((prev) => ({ ...prev, carId: car.id }))}
                               className={`border rounded-lg p-3 cursor-pointer transition-all ${
-                                isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/50"
+                                isSelected
+                                  ? "border-primary bg-primary/5 shadow-sm"
+                                  : "border-border hover:border-primary/50"
                               }`}
                             >
                               <div className="flex gap-3">
