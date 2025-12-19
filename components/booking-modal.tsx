@@ -128,6 +128,7 @@ export default function BookingModal({
 }: BookingModalProps) {
   const router = useRouter()
   const { user } = useAuth()
+
   const [step, setStep] = useState(1)
   const [showVehicles, setShowVehicles] = useState(false)
 
@@ -183,7 +184,7 @@ export default function BookingModal({
   const [bookingComplete, setBookingComplete] = useState(false)
   const [bookingId, setBookingId] = useState("")
 
-  // Step 1 Fixes aus Code 2
+  // Popover open state + month state (Step 1 Fix)
   const [pickupOpen, setPickupOpen] = useState(false)
   const [returnOpen, setReturnOpen] = useState(false)
 
@@ -260,9 +261,7 @@ export default function BookingModal({
   const [loadingExtras, setLoadingExtras] = useState(true)
 
   useEffect(() => {
-    if (isOpen) {
-      fetchLocations()
-    }
+    if (isOpen) fetchLocations()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
@@ -285,9 +284,7 @@ export default function BookingModal({
       }
     }
 
-    if (isOpen) {
-      fetchExtras()
-    }
+    if (isOpen) fetchExtras()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
@@ -374,7 +371,9 @@ export default function BookingModal({
     const car = getSelectedCar()
     if (!car) return 0
     const days = calculateDays()
-    return car.price_per_day * days + calculateExtrasTotal()
+    const carTotal = car.price_per_day * days
+    const extrasTotal = calculateExtrasTotal()
+    return carTotal + extrasTotal
   }
 
   const toggleExtra = (extraId: string) => {
@@ -510,7 +509,6 @@ export default function BookingModal({
 
         const phoneError = validatePhoneNumber(formData.phone)
         if (phoneError) errors.push(phoneError)
-
         break
       }
     }
@@ -522,7 +520,10 @@ export default function BookingModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!canProceed() || step !== 4) return
-    if (!validateCurrentStep()) return
+
+    if (!validateCurrentStep()) {
+      return
+    }
 
     setSubmitting(true)
     setError("")
@@ -608,6 +609,7 @@ export default function BookingModal({
     setShowVehicles(false)
     setCars([])
     setStep(1)
+
     setPickupOpen(false)
     setReturnOpen(false)
 
@@ -628,13 +630,26 @@ export default function BookingModal({
       totalPrice: 0,
       extras: {
         services: [],
-        drivers: { mainDriver: null, additionalDriver: null },
+        drivers: {
+          mainDriver: null,
+          additionalDriver: null,
+        },
       },
     })
 
     setDriverData({
-      driver1: { firstName: "", lastName: "", birthDate: "", licenseIssueDate: "" },
-      driver2: { firstName: "", lastName: "", birthDate: "", licenseIssueDate: "" },
+      driver1: {
+        firstName: "",
+        lastName: "",
+        birthDate: "",
+        licenseIssueDate: "",
+      },
+      driver2: {
+        firstName: "",
+        lastName: "",
+        birthDate: "",
+        licenseIssueDate: "",
+      },
     })
 
     setSelectedExtras([])
@@ -666,15 +681,27 @@ export default function BookingModal({
   }
 
   const handlePreviousStep = () => {
-    if (step > 1) setStep(step - 1)
-    else handleClose()
+    if (step > 1) {
+      setStep(step - 1)
+    } else {
+      handleClose()
+    }
   }
 
   const isSubmitting = submitting
   const canProceedToNextStep = () => canProceed()
 
+  // STEP HEADER items
+  const stepItems = [
+    { num: 1, label: "Zeitraum & Fahrzeug" },
+    { num: 2, label: "Extras" },
+    { num: 3, label: "Fahrerdaten" },
+    { num: 4, label: "Bestätigung" },
+  ]
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
+      {/* Scrollbar Fix: outer overflow-hidden, inner scroll */}
       <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[90vw] md:max-w-[1100px] lg:max-w-[1200px] h-[90vh] max-h-[90vh] sm:h-[85vh] sm:max-h-[85vh] p-4 sm:p-6 md:p-10 rounded-xl sm:rounded-2xl overflow-hidden">
         <DialogTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
           Fahrzeug buchen
@@ -682,65 +709,55 @@ export default function BookingModal({
 
         <form className="flex h-full min-h-0 flex-col" onSubmit={handleSubmit}>
           <div className="mt-3 sm:mt-4 mb-4 sm:mb-6">
+            {/* Mobile stepper */}
             <div className="flex md:hidden items-center justify-center gap-2">
-              {[
-                { num: 1, label: "Zeitraum & Fahrzeug" },
-                { num: 2, label: "Extras" },
-                { num: 3, label: "Fahrerdaten" },
-                { num: 4, label: "Bestätigung" },
-              ].map((item, index) => (
-                <React.Fragment key={item.num}>
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
-                      step === item.num
-                        ? "bg-primary text-primary-foreground shadow-lg ring-2 ring-primary/20"
-                        : step > item.num
-                          ? "bg-green-500 text-white"
-                          : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {step > item.num ? <Check className="w-4 h-4" /> : item.num}
-                  </div>
-                  {index < 3 && <div className="w-4 sm:w-6 h-0.5 bg-muted" />}
-                </React.Fragment>
-              ))}
-            </div>
-
-            <div className="hidden md:flex items-center justify-center gap-3">
-              {[
-                { num: 1, label: "Zeitraum & Fahrzeug" },
-                { num: 2, label: "Extras" },
-                { num: 3, label: "Fahrerdaten" },
-                { num: 4, label: "Bestätigung" },
-              ].map((item, index) => (
-                <React.Fragment key={item.num}>
-                  <div className="flex items-center gap-2">
+              {stepItems.map((item, index) => {
+                const isDoneOrActive = step >= item.num
+                return (
+                  <React.Fragment key={item.num}>
                     <div
                       className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
-                        step === item.num
-                          ? "bg-primary text-primary-foreground"
-                          : step > item.num
-                            ? "bg-primary/20 text-primary"
-                            : "bg-muted text-muted-foreground",
+                        "w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all",
+                        isDoneOrActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
                       )}
                     >
                       {item.num}
                     </div>
-                    <span
-                      className={cn(
-                        "text-sm font-medium transition-colors",
-                        step === item.num ? "text-foreground" : "text-muted-foreground",
-                      )}
-                    >
-                      {item.label}
-                    </span>
-                  </div>
-                  {index < 3 && (
-                    <div className={cn("h-[2px] w-8 transition-colors", step > item.num ? "bg-primary" : "bg-muted")} />
-                  )}
-                </React.Fragment>
-              ))}
+                    {index < stepItems.length - 1 && (
+                      <div className={cn("w-4 sm:w-6 h-0.5", step > item.num ? "bg-primary" : "bg-muted")} />
+                    )}
+                  </React.Fragment>
+                )
+              })}
+            </div>
+
+            {/* Desktop stepper (Fix: überall wie Step 1) */}
+            <div className="hidden md:flex items-center justify-center gap-3">
+              {stepItems.map((item, index) => {
+                const isDoneOrActive = step >= item.num
+                const isPast = step > item.num
+                return (
+                  <React.Fragment key={item.num}>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors",
+                          isDoneOrActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {item.num}
+                      </div>
+                      <span className={cn("text-sm font-medium transition-colors", isDoneOrActive ? "text-foreground" : "text-muted-foreground")}>
+                        {item.label}
+                      </span>
+                    </div>
+
+                    {index < stepItems.length - 1 && (
+                      <div className={cn("h-[2px] w-8 transition-colors", isPast ? "bg-primary" : "bg-muted")} />
+                    )}
+                  </React.Fragment>
+                )
+              })}
             </div>
 
             <div className="flex md:hidden justify-center mt-3">
@@ -753,8 +770,9 @@ export default function BookingModal({
             </div>
           </div>
 
+          {/* SCROLL-CONTAINER */}
           <div className="flex-1 min-h-0 overflow-y-auto space-y-4 sm:space-y-6 px-1 pb-4">
-            {/* STEP 1 aus Code 2 */}
+            {/* STEP 1 (aus deinem 2. Code) */}
             {step === 1 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
@@ -835,6 +853,7 @@ export default function BookingModal({
                               return { ...prev, ...updates }
                             })
 
+                            // Fix: Rückgabe-Kalender springt in den gleichen Monat
                             setReturnCalendarMonth(new Date(newPickupDate + "T12:00:00"))
                           }}
                           initialFocus
@@ -910,7 +929,9 @@ export default function BookingModal({
                       onOpenChange={(open) => {
                         setReturnOpen(open)
                         if (open) {
-                          setReturnCalendarMonth(formData.pickupDate ? new Date(formData.pickupDate + "T12:00:00") : new Date())
+                          setReturnCalendarMonth(
+                            formData.pickupDate ? new Date(formData.pickupDate + "T12:00:00") : new Date(),
+                          )
                         }
                       }}
                     >
@@ -1102,7 +1123,7 @@ export default function BookingModal({
               </div>
             )}
 
-            {/* STEP 2 aus Code 1 */}
+            {/* STEP 2 (aus deinem 1. Code) */}
             {step === 2 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
@@ -1194,7 +1215,7 @@ export default function BookingModal({
               </div>
             )}
 
-            {/* STEP 3 aus Code 1 */}
+            {/* STEP 3 (aus deinem 1. Code) */}
             {step === 3 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
@@ -1364,7 +1385,7 @@ export default function BookingModal({
               </div>
             )}
 
-            {/* STEP 4 aus Code 1 */}
+            {/* STEP 4 (aus deinem 1. Code) */}
             {step === 4 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
