@@ -59,11 +59,10 @@ const formatDateForDB = (date: Date): string => {
 }
 
 const generateTimeOptions = () => {
-  const times = []
+  const times: string[] = []
   for (let hour = 0; hour < 24; hour++) {
     for (let minute = 0; minute < 60; minute += 30) {
-      const timeString = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
-      times.push(timeString)
+      times.push(`${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`)
     }
   }
   return times
@@ -184,7 +183,7 @@ export default function BookingModal({
   const [bookingComplete, setBookingComplete] = useState(false)
   const [bookingId, setBookingId] = useState("")
 
-  // Popover open state + month state, damit Rückgabe-Kalender im Monat des Abholdatums startet
+  // Popover open state + month state
   const [pickupOpen, setPickupOpen] = useState(false)
   const [returnOpen, setReturnOpen] = useState(false)
 
@@ -278,17 +277,15 @@ export default function BookingModal({
         }
         const data = await response.json()
         setAvailableExtras(data)
-      } catch (error) {
-        console.log("[v0] Error fetching extras, using default extras:", error)
+      } catch (err) {
+        console.log("[v0] Error fetching extras, using default extras:", err)
         setAvailableExtras(defaultExtras)
       } finally {
         setLoadingExtras(false)
       }
     }
 
-    if (isOpen) {
-      fetchExtras()
-    }
+    if (isOpen) fetchExtras()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen])
 
@@ -300,8 +297,8 @@ export default function BookingModal({
         const locationsData = await response.json()
         setLocations(locationsData)
       }
-    } catch (error) {
-      console.error("[v0] Error fetching locations:", error)
+    } catch (err) {
+      console.error("[v0] Error fetching locations:", err)
       toast.error("Fehler beim Laden der Standorte")
     } finally {
       setLoading(false)
@@ -315,14 +312,12 @@ export default function BookingModal({
     setFormData((prev) => ({ ...prev, carId: "" }))
 
     try {
-      console.log("[v0] Fetching available cars for dates:", formData.pickupDate, formData.returnDate)
       const response = await fetch(
         `/api/cars/get-available?pickupDate=${formData.pickupDate}&dropoffDate=${formData.returnDate}`,
       )
 
       if (response.ok) {
         const carsData = await response.json()
-        console.log("[v0] Available cars:", carsData.length)
         setCars(carsData)
         setDatesSelected(true)
         setShowVehicles(true)
@@ -341,8 +336,8 @@ export default function BookingModal({
       } else {
         toast.error("Fehler beim Laden der verfügbaren Fahrzeuge")
       }
-    } catch (error) {
-      console.error("[v0] Error fetching available cars:", error)
+    } catch (err) {
+      console.error("[v0] Error fetching available cars:", err)
       toast.error("Fehler beim Laden der verfügbaren Fahrzeuge")
     } finally {
       setLoadingCars(false)
@@ -358,8 +353,7 @@ export default function BookingModal({
     const pickup = new Date(formData.pickupDate)
     const returnDate = new Date(formData.returnDate)
     const diffTime = Math.abs(returnDate.getTime() - pickup.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return diffDays
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
   }
 
   const getSelectedCar = () => cars.find((car) => car.id === formData.carId)
@@ -376,9 +370,7 @@ export default function BookingModal({
     const car = getSelectedCar()
     if (!car) return 0
     const days = calculateDays()
-    const carTotal = car.price_per_day * days
-    const extrasTotal = calculateExtrasTotal()
-    return carTotal + extrasTotal
+    return car.price_per_day * days + calculateExtrasTotal()
   }
 
   const toggleExtra = (extraId: string) => {
@@ -405,11 +397,8 @@ export default function BookingModal({
     )
     if (dateError) return false
 
-    const pickupAddressError = validateLocationAddress(formData.pickupAddress, "Abholstandort")
-    if (pickupAddressError) return false
-
-    const dropoffAddressError = validateLocationAddress(formData.dropoffAddress, "Rückgabestandort")
-    if (dropoffAddressError) return false
+    if (validateLocationAddress(formData.pickupAddress, "Abholstandort")) return false
+    if (validateLocationAddress(formData.dropoffAddress, "Rückgabestandort")) return false
 
     return true
   }
@@ -455,9 +444,6 @@ export default function BookingModal({
         if (dropoffAddressError) errors.push(dropoffAddressError)
         break
       }
-      case 2: {
-        break
-      }
       case 3: {
         const driver1 = driverData.driver1
 
@@ -493,10 +479,7 @@ export default function BookingModal({
           if (d2LicenseIssueError) errors.push(d2LicenseIssueError)
 
           if (areDriversIdentical(driver1, driver2)) {
-            errors.push({
-              field: "Zusatzfahrer",
-              message: "Hauptfahrer und Zusatzfahrer dürfen nicht identisch sein",
-            })
+            errors.push({ field: "Zusatzfahrer", message: "Hauptfahrer und Zusatzfahrer dürfen nicht identisch sein" })
           }
         }
         break
@@ -524,10 +507,7 @@ export default function BookingModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!canProceed() || step !== 4) return
-
-    if (!validateCurrentStep()) {
-      return
-    }
+    if (!validateCurrentStep()) return
 
     setSubmitting(true)
     setError("")
@@ -536,17 +516,11 @@ export default function BookingModal({
       const extrasWithDrivers = {
         services: selectedExtras.map((extraId) => {
           const extra = availableExtras.find((s) => s.id === extraId)
-          return {
-            id: extraId,
-            name: extra?.name,
-            price: extra?.price_per_day,
-          }
+          return { id: extraId, name: extra?.name, price: extra?.price_per_day }
         }),
         drivers: {
           mainDriver: driverData.driver1,
-          ...(selectedExtras.includes("additional_driver") && {
-            additionalDriver: driverData.driver2,
-          }),
+          ...(selectedExtras.includes("additional_driver") && { additionalDriver: driverData.driver2 }),
         },
       }
 
@@ -566,8 +540,6 @@ export default function BookingModal({
         totalPrice: calculateTotalPrice(),
       }
 
-      console.log("[v0] Booking data being sent:", bookingData)
-
       const response = await fetch("/api/bookings/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -577,18 +549,13 @@ export default function BookingModal({
       const result = await response.json()
 
       if (!response.ok) {
-        if (response.status === 409) {
-          setError(result.error || "Dieses Fahrzeug ist für den gewählten Zeitraum nicht verfügbar.")
-        } else if (response.status === 429) {
-          setError(result.error || "Zu viele Buchungsversuche. Bitte versuchen Sie es später erneut.")
-        } else {
-          setError(result.error || "Fehler beim Erstellen der Buchung")
-        }
+        if (response.status === 409) setError(result.error || "Dieses Fahrzeug ist für den gewählten Zeitraum nicht verfügbar.")
+        else if (response.status === 429) setError(result.error || "Zu viele Buchungsversuche. Bitte versuchen Sie es später erneut.")
+        else setError(result.error || "Fehler beim Erstellen der Buchung")
         setSubmitting(false)
         return
       }
 
-      console.log("[v0] Booking successful:", result)
       setBookingId(result.booking.id)
       setBookingComplete(true)
 
@@ -600,7 +567,6 @@ export default function BookingModal({
       handleClose()
       router.push("/dashboard/bookings")
     } catch (err: any) {
-      console.error("[v0] Booking error:", err)
       const msg = `Fehler bei der Buchung: ${err.message || "Bitte versuchen Sie es später erneut."}`
       setError(msg)
       toast.error(msg)
@@ -641,18 +607,8 @@ export default function BookingModal({
     })
 
     setDriverData({
-      driver1: {
-        firstName: "",
-        lastName: "",
-        birthDate: "",
-        licenseIssueDate: "",
-      },
-      driver2: {
-        firstName: "",
-        lastName: "",
-        birthDate: "",
-        licenseIssueDate: "",
-      },
+      driver1: { firstName: "", lastName: "", birthDate: "", licenseIssueDate: "" },
+      driver2: { firstName: "", lastName: "", birthDate: "", licenseIssueDate: "" },
     })
 
     setSelectedExtras([])
@@ -686,25 +642,23 @@ export default function BookingModal({
   }
 
   const handlePreviousStep = () => {
-    if (step > 1) {
-      setStep(step - 1)
-    } else {
-      handleClose()
-    }
+    if (step > 1) setStep(step - 1)
+    else handleClose()
   }
 
   const isSubmitting = submitting
   const canProceedToNextStep = () => canProceed()
-  const handleBooking = handleSubmit
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[90vw] md:max-w-[1100px] lg:max-w-[1200px] max-h-[90vh] sm:max-h-[85vh] p-4 sm:p-6 md:p-10 rounded-xl sm:rounded-2xl overflow-visible">
+      {/* FIX: overflow-hidden + flex/min-h-0 damit der Inhalt sauber scrollt und nichts aus dem Modal rausläuft */}
+      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[90vw] md:max-w-[1100px] lg:max-w-[1200px] max-h-[90vh] sm:max-h-[85vh] p-4 sm:p-6 md:p-10 rounded-xl sm:rounded-2xl overflow-hidden">
         <DialogTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
           Fahrzeug buchen
         </DialogTitle>
 
-        <form className="flex h-full flex-col" onSubmit={handleBooking}>
+        {/* FIX: min-h-0 ist entscheidend, damit der Scrollbereich korrekt rechnet */}
+        <form className="flex h-full min-h-0 flex-col" onSubmit={handleSubmit}>
           <div className="mt-3 sm:mt-4 mb-4 sm:mb-6">
             <div className="flex md:hidden items-center justify-center gap-2">
               {[
@@ -777,7 +731,8 @@ export default function BookingModal({
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto space-y-4 sm:space-y-6 px-1">
+          {/* FIX: min-h-0 + overflow-y-auto damit die Fahrzeugkarten sauber im Modal bleiben */}
+          <div className="flex-1 min-h-0 overflow-y-auto space-y-4 sm:space-y-6 px-1 pb-2">
             {step === 1 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
@@ -832,35 +787,33 @@ export default function BookingModal({
                           onMonthChange={setPickupCalendarMonth}
                           selected={formData.pickupDate ? new Date(formData.pickupDate + "T12:00:00") : undefined}
                           onSelect={(date) => {
-                            if (date) {
-                              const newPickupDate = formatDateForDB(date)
+                            if (!date) return
+                            const newPickupDate = formatDateForDB(date)
 
-                              setFormData((prev) => {
-                                const updates: any = { pickupDate: newPickupDate }
+                            setFormData((prev) => {
+                              const updates: any = { pickupDate: newPickupDate }
 
-                                if (prev.returnDate) {
-                                  const returnDateObj = new Date(prev.returnDate + "T12:00:00")
-                                  if (returnDateObj < date) {
-                                    updates.returnDate = ""
-                                    toast({
-                                      title: "Rückgabedatum aktualisiert",
-                                      description: "Bitte Rückgabedatum neu wählen (muss ab Abholdatum sein).",
-                                      variant: "default",
-                                    })
-                                  }
+                              if (prev.returnDate) {
+                                const returnDateObj = new Date(prev.returnDate + "T12:00:00")
+                                if (returnDateObj < date) {
+                                  updates.returnDate = ""
+                                  toast({
+                                    title: "Rückgabedatum aktualisiert",
+                                    description: "Bitte Rückgabedatum neu wählen (muss ab Abholdatum sein).",
+                                    variant: "default",
+                                  })
                                 }
+                              }
 
-                                const availableSlots = getAvailableTimeSlots(date)
-                                if (prev.pickupTime && !availableSlots.includes(prev.pickupTime)) {
-                                  updates.pickupTime = availableSlots[0] || "09:00"
-                                }
+                              const availableSlots = getAvailableTimeSlots(date)
+                              if (prev.pickupTime && !availableSlots.includes(prev.pickupTime)) {
+                                updates.pickupTime = availableSlots[0] || "09:00"
+                              }
 
-                                return { ...prev, ...updates }
-                              })
+                              return { ...prev, ...updates }
+                            })
 
-                              // Rückgabe-Kalender soll im selben Monat wie Abholdatum starten
-                              setReturnCalendarMonth(new Date(newPickupDate + "T12:00:00"))
-                            }
+                            setReturnCalendarMonth(new Date(newPickupDate + "T12:00:00"))
                           }}
                           initialFocus
                           locale={de}
@@ -935,7 +888,6 @@ export default function BookingModal({
                       onOpenChange={(open) => {
                         setReturnOpen(open)
                         if (open) {
-                          // Öffnet im Monat des Abholdatums (oder heute, falls noch kein Abholdatum)
                           setReturnCalendarMonth(
                             formData.pickupDate ? new Date(formData.pickupDate + "T12:00:00") : new Date(),
                           )
@@ -965,12 +917,8 @@ export default function BookingModal({
                           onMonthChange={setReturnCalendarMonth}
                           selected={formData.returnDate ? new Date(formData.returnDate + "T12:00:00") : undefined}
                           onSelect={(date) => {
-                            if (date) {
-                              setFormData((prev) => ({
-                                ...prev,
-                                returnDate: formatDateForDB(date),
-                              }))
-                            }
+                            if (!date) return
+                            setFormData((prev) => ({ ...prev, returnDate: formatDateForDB(date) }))
                           }}
                           initialFocus
                           locale={de}
@@ -981,9 +929,7 @@ export default function BookingModal({
                               pickupDate.setHours(0, 0, 0, 0)
                               const comparisonDate = new Date(date)
                               comparisonDate.setHours(0, 0, 0, 0)
-                              if (comparisonDate < pickupDate) {
-                                return true
-                              }
+                              if (comparisonDate < pickupDate) return true
                             }
                             return isDateDisabledForBooking(date)
                           }}
@@ -1032,10 +978,7 @@ export default function BookingModal({
                   </div>
 
                   <div className="space-y-2 sm:space-y-3">
-                    <Label
-                      htmlFor="dropoffAddress"
-                      className="flex items-center gap-2 font-medium text-sm sm:text-base"
-                    >
+                    <Label htmlFor="dropoffAddress" className="flex items-center gap-2 font-medium text-sm sm:text-base">
                       <MapPin className="w-4 h-4 text-primary" />
                       Rückgabestandort *
                     </Label>
@@ -1052,6 +995,7 @@ export default function BookingModal({
 
                 <div className="pt-2">
                   <Button
+                    type="button"
                     onClick={handleLoadVehicles}
                     disabled={!isStep1Valid || loadingCars}
                     className="w-full h-10 sm:h-11"
@@ -1140,6 +1084,7 @@ export default function BookingModal({
               </div>
             )}
 
+            {/* Step 2, 3, 4 bleiben unverändert (wie bei dir) */}
             {step === 2 && (
               <div className="space-y-4 sm:space-y-6">
                 <div>
@@ -1563,7 +1508,7 @@ export default function BookingModal({
               </Button>
             ) : (
               <Button
-                onClick={handleBooking}
+                type="submit"
                 disabled={!canProceedToNextStep() || isSubmitting}
                 className="flex-1 h-10 sm:h-11 text-sm sm:text-base font-semibold"
               >
