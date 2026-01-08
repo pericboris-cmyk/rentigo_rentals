@@ -542,36 +542,22 @@ export default function BookingModal({
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    // CHANGE: Prevent accidental form submission on Enter key or other auto-triggers
     e.preventDefault()
 
-    console.log("[v0] Form submit triggered", {
-      eventType: e.type,
-      target: e.target,
-      currentStep: step,
-      canProceed: canProceed(),
-      isSubmitting: isSubmitting,
-      timestamp: new Date().toISOString(),
-    })
-
-    // CHANGE: Only allow submission from step 4 with explicit button click
+    // Only allow submission from step 4 with explicit button click
     if (step !== 4) {
-      console.log("[v0] Submit attempt blocked: not on step 4, current step:", step)
       return
     }
 
     if (!canProceed()) {
-      console.log("[v0] Submit attempt blocked: canProceed is false")
       return
     }
 
     if (isSubmitting) {
-      console.log("[v0] Submit attempt blocked: already submitting")
       return
     }
 
     if (!validateCurrentStep()) {
-      console.log("[v0] Submit attempt blocked: validation failed")
       return
     }
 
@@ -612,8 +598,6 @@ export default function BookingModal({
         totalPrice: calculateTotalPrice(),
       }
 
-      console.log("[v0] Booking data being sent:", bookingData)
-
       const response = await fetch("/api/bookings/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -634,7 +618,6 @@ export default function BookingModal({
         return
       }
 
-      console.log("[v0] Booking successful:", result)
       setBookingId(result.booking.id)
       setBookingComplete(true)
 
@@ -739,14 +722,7 @@ export default function BookingModal({
   }
 
   const isSubmitting = submitting
-  // CHANGE: Fix canProceedToNextStep to prevent auto-submit on step 4
-  const canProceedToNextStep = () => {
-    // Only allow proceeding if NOT on the last step (step 4 is confirmation-only)
-    if (step === 4) {
-      return false // Never proceed from step 4, button is disabled
-    }
-    return canProceed()
-  }
+  const canProceedToNextStep = () => canProceed()
 
   // STEP HEADER items
   const stepItems = [
@@ -757,10 +733,10 @@ export default function BookingModal({
   ]
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
-    // CHANGE: Prevent Enter key from submitting form completely - block it on all form elements
-    if (e.key === "Enter") {
+    // CHANGE: Prevent Enter key from submitting form except on the submit button
+    if (e.key === "Enter" && !(e.target instanceof HTMLButtonElement)) {
       e.preventDefault()
-      console.log("[v0] Enter key blocked on form")
+      console.log("[v0] Enter key blocked on non-button element")
     }
   }
 

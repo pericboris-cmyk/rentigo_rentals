@@ -70,12 +70,17 @@ export default function BookingDetailModal({ bookingId, onClose }: BookingDetail
     try {
       const response = await fetch(`/api/bookings/${bookingId}/cancel`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
       })
 
       if (response.ok) {
         setBooking({ ...booking, status: "cancelled" })
         setShowCancelConfirm(false)
         setShowCancelSuccess(true)
+      } else if (response.status === 404) {
+        alert("Fehler: Cancel-Endpoint nicht gefunden. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.")
       } else {
         const data = await response.json()
         alert(`Fehler bei der Stornierung: ${data.error}`)
