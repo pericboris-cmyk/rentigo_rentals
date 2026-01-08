@@ -43,10 +43,15 @@ export default function BookingDetailModal({ bookingId, onClose }: BookingDetail
   useEffect(() => {
     const fetchBookingDetail = async () => {
       try {
+        console.log("[v0] Fetching booking detail for ID:", bookingId)
         const response = await fetch(`/api/bookings/${bookingId}`)
         if (response.ok) {
           const data = await response.json()
+          console.log("[v0] Booking detail fetched successfully:", data.id)
           setBooking(data)
+        } else {
+          const errorData = await response.json()
+          console.error("[v0] Failed to fetch booking detail:", errorData)
         }
       } catch (error) {
         console.error("[v0] Error fetching booking detail:", error)

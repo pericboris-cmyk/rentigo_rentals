@@ -542,6 +542,16 @@ export default function BookingModal({
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("[v0] Form submit triggered", {
+      eventType: e.type,
+      target: e.target,
+      currentStep: step,
+      canProceed: canProceed(),
+      isSubmitting: isSubmitting,
+      timestamp: new Date().toISOString(),
+      stack: new Error().stack?.split("\n").slice(0, 5).join("\n"),
+    })
+
     e.preventDefault()
     if (step !== 4 || !canProceed()) {
       console.log("[v0] Submit attempt blocked: step", step, "canProceed", canProceed())
@@ -726,6 +736,19 @@ export default function BookingModal({
     { num: 4, label: "Bestätigung" },
   ]
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+      console.log("[v0] Enter+Ctrl/Cmd detected on step", step)
+    }
+    if (e.key === "Enter" && e.target instanceof HTMLTextAreaElement) {
+      // Allow Enter in textareas
+      return
+    }
+    if (e.key === "Enter" && !(e.target instanceof HTMLTextAreaElement)) {
+      console.log("[v0] Enter key pressed on", e.target, "on step", step)
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       {/* Scrollbar Fix: outer overflow-hidden, inner scroll */}
@@ -734,7 +757,7 @@ export default function BookingModal({
           Fahrzeug buchen
         </DialogTitle>
 
-        <form className="flex h-full min-h-0 flex-col" onSubmit={handleSubmit}>
+        <form className="flex h-full min-h-0 flex-col" onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
           <div className="mt-3 sm:mt-4 mb-4 sm:mb-6">
             {/* Mobile stepper */}
             <div className="flex md:hidden items-center justify-center gap-2">
