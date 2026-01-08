@@ -22,6 +22,14 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       },
     )
 
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
     const { data: booking, error: fetchError } = await supabase
       .from("bookings")
       .select(
@@ -36,6 +44,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         pickup_address,
         dropoff_address,
         total_price,
+        user_id,
         cars (
           name,
           year
@@ -46,7 +55,12 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       .single()
 
     if (fetchError || !booking) {
+      console.error("[v0] Booking fetch error:", fetchError)
       return NextResponse.json({ error: "Booking not found" }, { status: 404 })
+    }
+
+    if (booking.user_id !== user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 })
     }
 
     // Check if booking can be cancelled

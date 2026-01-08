@@ -543,7 +543,10 @@ export default function BookingModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!canProceed() || step !== 4) return
+    if (step !== 4 || !canProceed()) {
+      console.log("[v0] Submit attempt blocked: step", step, "canProceed", canProceed())
+      return
+    }
 
     if (!validateCurrentStep()) {
       return

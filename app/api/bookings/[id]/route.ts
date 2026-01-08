@@ -7,7 +7,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-    // Fetch booking with car and location details
+    // Fetch booking with car details
     const { data: booking, error } = await supabase
       .from("bookings")
       .select(`
@@ -19,16 +19,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           transmission,
           seats,
           fuel_type
-        ),
-        pickup_location:locations!bookings_pickup_location_id_fkey (
-          name,
-          address,
-          city
-        ),
-        dropoff_location:locations!bookings_dropoff_location_id_fkey (
-          name,
-          address,
-          city
         )
       `)
       .eq("id", id)
