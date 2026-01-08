@@ -542,22 +542,36 @@ export default function BookingModal({
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    // CHANGE: Prevent accidental form submission on Enter key or other auto-triggers
     e.preventDefault()
 
-    // Only allow submission from step 4 with explicit button click
+    console.log("[v0] Form submit triggered", {
+      eventType: e.type,
+      target: e.target,
+      currentStep: step,
+      canProceed: canProceed(),
+      isSubmitting: isSubmitting,
+      timestamp: new Date().toISOString(),
+    })
+
+    // CHANGE: Only allow submission from step 4 with explicit button click
     if (step !== 4) {
+      console.log("[v0] Submit attempt blocked: not on step 4, current step:", step)
       return
     }
 
     if (!canProceed()) {
+      console.log("[v0] Submit attempt blocked: canProceed is false")
       return
     }
 
     if (isSubmitting) {
+      console.log("[v0] Submit attempt blocked: already submitting")
       return
     }
 
     if (!validateCurrentStep()) {
+      console.log("[v0] Submit attempt blocked: validation failed")
       return
     }
 
@@ -598,6 +612,8 @@ export default function BookingModal({
         totalPrice: calculateTotalPrice(),
       }
 
+      console.log("[v0] Booking data being sent:", bookingData)
+
       const response = await fetch("/api/bookings/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -618,6 +634,7 @@ export default function BookingModal({
         return
       }
 
+      console.log("[v0] Booking successful:", result)
       setBookingId(result.booking.id)
       setBookingComplete(true)
 
@@ -732,16 +749,35 @@ export default function BookingModal({
     { num: 4, label: "Bestätigung" },
   ]
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
-    // CHANGE: Prevent Enter key from submitting form except on the submit button
-    if (e.key === "Enter" && !(e.target instanceof HTMLButtonElement)) {
-      e.preventDefault()
-      console.log("[v0] Enter key blocked on non-button element")
+  // CHANGE: Prevent Enter key from triggering form submit on input fields
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement | HTMLButtonElement>) => {
+    // Block Enter key on input fields to prevent form submission, except on step 4 for specific inputs
+    if (e.key === "Enter") {
+      const target = e.currentTarget
+      if (target.tagName === "INPUT" && target.type !== "checkbox") {
+        // On step 4, only allow Enter if it's not on a "sensitive" input field that could lead to accidental submission
+        if (step === 4) {
+          if (target.id === "firstName" || target.id === "lastName" || target.id === "email" || target.id === "phone") {
+            e.preventDefault() // Prevent submission on these specific contact fields in step 4
+          }
+        } else {
+          // On steps other than 4, prevent Enter on all input fields
+          e.preventDefault()
+        }
+      } else if (target.tagName === "BUTTON" && target.type === "submit") {
+        // Allow Enter on the submit button itself
+        return
+      } else if (target.tagName === "TEXTAREA") {
+        // Allow Enter for new lines in textarea if not on step 4
+        if (step !== 4) {
+          e.preventDefault()
+        }
+      }
     }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       {/* Scrollbar Fix: outer overflow-hidden, inner scroll */}
       <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-visible p-4 sm:p-6">
         <DialogTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
@@ -1061,6 +1097,7 @@ export default function BookingModal({
                       onChange={(e) => setFormData((prev) => ({ ...prev, pickupAddress: e.target.value }))}
                       className="h-11 px-4 bg-transparent"
                       required
+                      onKeyDown={handleKeyDown}
                     />
                   </div>
 
@@ -1079,6 +1116,7 @@ export default function BookingModal({
                       onChange={(e) => setFormData((prev) => ({ ...prev, dropoffAddress: e.target.value }))}
                       className="h-11 px-4 bg-transparent"
                       required
+                      onKeyDown={handleKeyDown}
                     />
                   </div>
                 </div>
@@ -1298,6 +1336,7 @@ export default function BookingModal({
                           placeholder="Max"
                           className="h-11 px-4"
                           required
+                          onKeyDown={handleKeyDown}
                         />
                       </div>
 
@@ -1315,6 +1354,7 @@ export default function BookingModal({
                           placeholder="Mustermann"
                           className="h-11 px-4"
                           required
+                          onKeyDown={handleKeyDown}
                         />
                       </div>
 
@@ -1332,6 +1372,7 @@ export default function BookingModal({
                           }
                           className="h-11 px-4"
                           required
+                          onKeyDown={handleKeyDown}
                         />
                       </div>
 
@@ -1349,6 +1390,7 @@ export default function BookingModal({
                           }
                           className="h-11 px-4"
                           required
+                          onKeyDown={handleKeyDown}
                         />
                       </div>
                     </div>
@@ -1376,6 +1418,7 @@ export default function BookingModal({
                             placeholder="Anna"
                             className="h-11 px-4"
                             required
+                            onKeyDown={handleKeyDown}
                           />
                         </div>
 
@@ -1393,6 +1436,7 @@ export default function BookingModal({
                             placeholder="Muster"
                             className="h-11 px-4"
                             required
+                            onKeyDown={handleKeyDown}
                           />
                         </div>
 
@@ -1410,6 +1454,7 @@ export default function BookingModal({
                             }
                             className="h-11 px-4"
                             required
+                            onKeyDown={handleKeyDown}
                           />
                         </div>
 
@@ -1427,6 +1472,7 @@ export default function BookingModal({
                             }
                             className="h-11 px-4"
                             required
+                            onKeyDown={handleKeyDown}
                           />
                         </div>
                       </div>
@@ -1466,6 +1512,7 @@ export default function BookingModal({
                           required
                           className="border-border bg-background"
                           placeholder="Max"
+                          onKeyDown={handleKeyDown}
                         />
                       </div>
                       <div className="space-y-2">
@@ -1479,6 +1526,7 @@ export default function BookingModal({
                           required
                           className="border-border bg-background"
                           placeholder="Muster"
+                          onKeyDown={handleKeyDown}
                         />
                       </div>
                       <div className="space-y-2">
@@ -1493,13 +1541,19 @@ export default function BookingModal({
                           required
                           className="border-border bg-background"
                           placeholder="max.muster@example.com"
+                          onKeyDown={handleKeyDown}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="phone" className="text-foreground font-semibold">
                           Telefon
                         </Label>
-                        <PhoneInput value={formData.phone} onChange={handlePhoneChange} required />
+                        <PhoneInput
+                          value={formData.phone}
+                          onChange={handlePhoneChange}
+                          required
+                          onKeyDown={handleKeyDown}
+                        />
                       </div>
                     </div>
                   </div>
@@ -1576,24 +1630,8 @@ export default function BookingModal({
                 </div>
               </div>
             )}
-
-            {/* START: Updated Error Display */}
-            {validationErrors.length > 0 && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-700 font-semibold mb-2">Fehler:</p>
-                <ul className="space-y-1">
-                  {validationErrors.map((err, idx) => (
-                    <li key={idx} className="text-red-600 text-sm">
-                      • {err.message}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {/* END: Updated Error Display */}
           </div>
 
-          {/* Navigation Buttons */}
           <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
             <Button
               type="button"
@@ -1608,7 +1646,7 @@ export default function BookingModal({
               <Button
                 type="button"
                 onClick={handleNextStep}
-                disabled={!canProceedToNextStep() || isSubmitting}
+                disabled={!canProceedToNextStep()}
                 className="flex-1 h-10 sm:h-11 text-sm sm:text-base font-semibold"
               >
                 Weiter
