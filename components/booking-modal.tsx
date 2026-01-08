@@ -741,7 +741,7 @@ export default function BookingModal({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       {/* Scrollbar Fix: outer overflow-hidden, inner scroll */}
       <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-visible p-4 sm:p-6">
         <DialogTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
@@ -1576,8 +1576,24 @@ export default function BookingModal({
                 </div>
               </div>
             )}
+
+            {/* START: Updated Error Display */}
+            {validationErrors.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-red-700 font-semibold mb-2">Fehler:</p>
+                <ul className="space-y-1">
+                  {validationErrors.map((err, idx) => (
+                    <li key={idx} className="text-red-600 text-sm">
+                      • {err.message}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {/* END: Updated Error Display */}
           </div>
 
+          {/* Navigation Buttons */}
           <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6 pt-4 sm:pt-6 border-t">
             <Button
               type="button"
@@ -1592,7 +1608,7 @@ export default function BookingModal({
               <Button
                 type="button"
                 onClick={handleNextStep}
-                disabled={!canProceedToNextStep()}
+                disabled={!canProceedToNextStep() || isSubmitting}
                 className="flex-1 h-10 sm:h-11 text-sm sm:text-base font-semibold"
               >
                 Weiter
