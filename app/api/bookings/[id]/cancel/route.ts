@@ -72,6 +72,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return NextResponse.json({ error: "Cannot cancel completed bookings" }, { status: 400 })
     }
 
+    if (!booking.cars) {
+      console.error("[v0] Booking has no associated car data")
+      return NextResponse.json({ error: "Invalid booking data" }, { status: 400 })
+    }
+
     const { error: updateError } = await supabase
       .from("bookings")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })

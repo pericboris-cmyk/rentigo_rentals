@@ -541,7 +541,10 @@ export default function BookingModal({
     return errors.length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    // CHANGE: Prevent accidental form submission on Enter key or other auto-triggers
+    e.preventDefault()
+
     console.log("[v0] Form submit triggered", {
       eventType: e.type,
       target: e.target,
@@ -549,16 +552,26 @@ export default function BookingModal({
       canProceed: canProceed(),
       isSubmitting: isSubmitting,
       timestamp: new Date().toISOString(),
-      stack: new Error().stack?.split("\n").slice(0, 5).join("\n"),
     })
 
-    e.preventDefault()
-    if (step !== 4 || !canProceed()) {
-      console.log("[v0] Submit attempt blocked: step", step, "canProceed", canProceed())
+    // CHANGE: Only allow submission from step 4 with explicit button click
+    if (step !== 4) {
+      console.log("[v0] Submit attempt blocked: not on step 4, current step:", step)
+      return
+    }
+
+    if (!canProceed()) {
+      console.log("[v0] Submit attempt blocked: canProceed is false")
+      return
+    }
+
+    if (isSubmitting) {
+      console.log("[v0] Submit attempt blocked: already submitting")
       return
     }
 
     if (!validateCurrentStep()) {
+      console.log("[v0] Submit attempt blocked: validation failed")
       return
     }
 
@@ -726,7 +739,14 @@ export default function BookingModal({
   }
 
   const isSubmitting = submitting
-  const canProceedToNextStep = () => canProceed()
+  // CHANGE: Fix canProceedToNextStep to prevent auto-submit on step 4
+  const canProceedToNextStep = () => {
+    // Only allow proceeding if NOT on the last step (step 4 is confirmation-only)
+    if (step === 4) {
+      return false // Never proceed from step 4, button is disabled
+    }
+    return canProceed()
+  }
 
   // STEP HEADER items
   const stepItems = [
@@ -736,25 +756,20 @@ export default function BookingModal({
     { num: 4, label: "Bestätigung" },
   ]
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-      console.log("[v0] Enter+Ctrl/Cmd detected on step", step)
-    }
-    if (e.key === "Enter" && e.target instanceof HTMLTextAreaElement) {
-      // Allow Enter in textareas
-      return
-    }
-    if (e.key === "Enter" && !(e.target instanceof HTMLTextAreaElement)) {
-      console.log("[v0] Enter key pressed on", e.target, "on step", step)
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+    // CHANGE: Prevent Enter key from submitting form completely - block it on all form elements
+    if (e.key === "Enter") {
+      e.preventDefault()
+      console.log("[v0] Enter key blocked on form")
     }
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       {/* Scrollbar Fix: outer overflow-hidden, inner scroll */}
-      <DialogContent className="w-[95vw] sm:w-[90vw] sm:max-w-[90vw] md:max-w-[1100px] lg:max-w-[1200px] h-[90vh] max-h-[90vh] sm:h-[85vh] sm:max-h-[85vh] p-4 sm:p-6 md:p-10 rounded-xl sm:rounded-2xl overflow-hidden">
+      <DialogContent className="w-full max-w-2xl max-h-[90vh] overflow-visible p-4 sm:p-6">
         <DialogTitle className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-center bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-          Fahrzeug buchen
+          Mietwagen buchen
         </DialogTitle>
 
         <form className="flex h-full min-h-0 flex-col" onSubmit={handleSubmit} onKeyDown={handleKeyDown}>
