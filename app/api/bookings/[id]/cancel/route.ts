@@ -2,9 +2,9 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { type NextRequest, NextResponse } from "next/server"
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id: bookingId } = await params
+    const { id: bookingId } = params
 
     const cookieStore = await cookies()
     const supabase = createServerClient(
@@ -26,20 +26,19 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .from("bookings")
       .select(
         `
-        *,
+        id,
+        first_name,
+        last_name,
+        email,
+        status,
+        pickup_date,
+        dropoff_date,
+        pickup_address,
+        dropoff_address,
+        total_price,
         cars (
           name,
           year
-        ),
-        pickup_location:locations!bookings_pickup_location_id_fkey (
-          name,
-          address,
-          city
-        ),
-        dropoff_location:locations!bookings_dropoff_location_id_fkey (
-          name,
-          address,
-          city
         )
       `,
       )
@@ -79,8 +78,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       carYear: booking.cars.year,
       pickupDate: booking.pickup_date,
       dropoffDate: booking.dropoff_date,
-      pickupLocation: `${booking.pickup_location.name}, ${booking.pickup_location.city}`,
-      dropoffLocation: `${booking.dropoff_location.name}, ${booking.dropoff_location.city}`,
+      pickupLocation: booking.pickup_address,
+      dropoffLocation: booking.dropoff_address,
       totalPrice: Number.parseFloat(booking.total_price),
       cancellationDate: new Date().toISOString(),
     })
